@@ -959,4 +959,61 @@ mod tests {
             "Log should contain week header"
         );
     }
+
+    #[test]
+    fn gig_completion_after_multi_week() {
+        // Assign a 3-week gig, advance 3 weeks, verify gig completes with rewards
+        // and artist returns to Idle.
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(50));
+        let gig = GigDef {
+            id: GigId(2),
+            name: "3-Week Drama".to_string(),
+            category: GigCategory::FilmTv,
+            duration_weeks: 3,
+            required_recognition_tier: RecognitionTier::Unknown,
+            skill_weights: vec![],
+            base_pay: 60_000,
+            recognition_reward: 30,
+            reputation_reward: 2,
+            stress_cost: 5,
+            ideal_image_tags: vec![],
+            conflicting_image_tags: vec![],
+            personality_preference: None,
+            skill_gains: vec![(SkillTarget::Acting, 20)],
+        };
+        game.process_command(GameCommand::AssignGig {
+            artist_index: 0,
+            gig,
+        });
+
+        // After 2 weeks the gig should still be in progress
+        game.process_command(GameCommand::AdvanceWeek);
+        game.process_command(GameCommand::AdvanceWeek);
+        assert!(game.artists[0].is_locked(), "artist should still be locked after 2 weeks");
+        assert_eq!(game.artists[0].current_activity, Activity::Gig);
+
+        // Week 3: gig completes
+        game.process_command(GameCommand::AdvanceWeek);
+        assert!(!game.artists[0].is_locked(), "artist should be unlocked after 3 weeks");
+        assert_eq!(game.artists[0].current_activity, Activity::Idle);
+        // Skill reward applied
+        assert_eq!(game.artists[0].skills.acting, 20);
+        // Gig pay credited — base_pay=60000, popularity ~50 → modifier ~1.0 → ~60000
+        assert!(game.company.balance > Money(1_000_000));
+        // Gig entry removed from pending list
+        assert!(game.pending_gigs.is_empty());
+    }
+
+    #[test]
+    fn no_artists_can_still_advance() {
+        // An empty game (no artists) should be able to advance weeks without error.
+        let mut game = default_game();
+        assert!(game.artists.is_empty());
+        for _ in 0..5 {
+            game.process_command(GameCommand::AdvanceWeek);
+        }
+        assert_eq!(game.calendar.week, 6);
+        assert_eq!(game.phase, GamePhase::MainGame);
+    }
 }

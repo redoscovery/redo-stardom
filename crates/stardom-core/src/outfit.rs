@@ -80,6 +80,18 @@ mod tests {
     }
 
     #[test]
+    fn apply_negative_modifier() {
+        // Sexy starts at 5, outfit applies -10 → should clamp to IMAGE_TAG_MIN (0)
+        let base = ImageTags {
+            sexy: 5,
+            ..Default::default()
+        };
+        let outfit = make_outfit(vec![(ImageTag::Sexy, -10)]);
+        let result = outfit.apply_to_image(&base);
+        assert_eq!(result.sexy, 0);
+    }
+
+    #[test]
     fn serialization_roundtrip() {
         let outfit = OutfitDef {
             id: OutfitId(1),

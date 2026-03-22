@@ -165,6 +165,24 @@ mod tests {
     }
 
     #[test]
+    fn skill_gain_clamps_at_max() {
+        // Pre-set vocal to just below SKILL_MAX, then apply training that would
+        // push it over the ceiling and verify it is clamped to exactly SKILL_MAX.
+        use crate::attribute::SKILL_MAX;
+        let mut artist = make_artist();
+        // Place the skill one point below the maximum so any positive gain overflows.
+        artist.skills.vocal = SKILL_MAX - 1;
+        // Ensure stress is 0 so the training produces a positive gain (gain=40).
+        artist.stats.stress = 0;
+        apply_training(&mut artist, &make_vocal_training());
+        assert_eq!(
+            artist.skills.vocal,
+            SKILL_MAX,
+            "vocal should be clamped at SKILL_MAX, not {}", artist.skills.vocal
+        );
+    }
+
+    #[test]
     fn complete_gig_rewards() {
         let mut artist = make_artist();
         // popularity=50 → pay_mod=1.0 → pay=100000

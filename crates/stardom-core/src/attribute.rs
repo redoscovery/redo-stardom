@@ -186,6 +186,16 @@ mod tests {
     }
 
     #[test]
+    fn base_attributes_lower_bound_clamp() {
+        // stamina=0 is below BASE_ATTR_MIN (1), so BaseAttributes::new should clamp it to 1
+        let attrs = BaseAttributes::new(0, 50, 50, 50);
+        assert_eq!(attrs.stamina, BASE_ATTR_MIN);
+        assert_eq!(attrs.intellect, 50);
+        assert_eq!(attrs.empathy, 50);
+        assert_eq!(attrs.charm, 50);
+    }
+
+    #[test]
     fn serialization_roundtrip() {
         let attrs = BaseAttributes::new(70, 60, 80, 55);
         let serialized = ron::to_string(&attrs).unwrap();
