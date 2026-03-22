@@ -17,6 +17,7 @@ pub struct Artist {
     pub stats: AuxiliaryStats,
     pub current_activity: Activity,
     pub inactive_weeks: u32,
+    pub locked_weeks: u32,
 }
 
 impl Artist {
@@ -33,7 +34,12 @@ impl Artist {
             stats: AuxiliaryStats::default(),
             current_activity: Activity::Idle,
             inactive_weeks: 0,
+            locked_weeks: 0,
         }
+    }
+
+    pub fn is_locked(&self) -> bool {
+        self.locked_weeks > 0
     }
 
     pub fn is_retired(&self, retirement_age: u32) -> bool {
@@ -72,6 +78,16 @@ mod tests {
         let deserialized: Artist = ron::from_str(&serialized).unwrap();
         assert_eq!(deserialized.id, artist.id);
         assert_eq!(deserialized.name, artist.name);
+    }
+
+    #[test]
+    fn artist_locked_in_gig() {
+        let mut artist = make_artist();
+        assert!(!artist.is_locked());
+        artist.locked_weeks = 3;
+        assert!(artist.is_locked());
+        artist.locked_weeks = 0;
+        assert!(!artist.is_locked());
     }
 
     #[test]

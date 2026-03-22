@@ -2,6 +2,10 @@ use crate::artist::Artist;
 use crate::calendar::{Calendar, WEEKS_PER_YEAR};
 use crate::company::CompanyState;
 use crate::config::Settings;
+use crate::gig::GigDef;
+use crate::job::JobDef;
+use crate::scheduling;
+use crate::training::TrainingDef;
 use crate::types::{Activity, Money};
 use serde::{Deserialize, Serialize};
 
@@ -15,6 +19,21 @@ pub enum GamePhase {
 #[derive(Debug, Clone)]
 pub enum GameCommand {
     AdvanceWeek,
+    AssignTraining {
+        artist_index: usize,
+        training: TrainingDef,
+    },
+    AssignJob {
+        artist_index: usize,
+        job: JobDef,
+    },
+    AssignGig {
+        artist_index: usize,
+        gig: GigDef,
+    },
+    AssignRest {
+        artist_index: usize,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,6 +43,8 @@ pub struct GameState {
     pub artists: Vec<Artist>,
     pub phase: GamePhase,
     pub settings: Settings,
+    #[serde(default)]
+    pub pending_gigs: Vec<(usize, GigDef)>,
 }
 
 impl GameState {
@@ -34,6 +55,7 @@ impl GameState {
             artists: Vec::new(),
             phase: GamePhase::MainGame,
             settings,
+            pending_gigs: Vec::new(),
         }
     }
 
@@ -43,6 +65,40 @@ impl GameState {
         }
         match command {
             GameCommand::AdvanceWeek => self.advance_week(),
+            GameCommand::AssignTraining {
+                artist_index,
+                training,
+            } => {
+                if let Some(artist) = self.artists.get_mut(artist_index)
+                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                {
+                    let cost = scheduling::apply_training(artist, &training);
+                    self.company.spend(Money(cost));
+                }
+            }
+            GameCommand::AssignJob { artist_index, job } => {
+                if let Some(artist) = self.artists.get_mut(artist_index)
+                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                {
+                    let pay = scheduling::apply_job(artist, &job);
+                    self.company.earn(Money(pay));
+                }
+            }
+            GameCommand::AssignGig { artist_index, gig } => {
+                if let Some(artist) = self.artists.get_mut(artist_index)
+                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                {
+                    scheduling::start_gig(artist, &gig);
+                    self.pending_gigs.push((artist_index, gig));
+                }
+            }
+            GameCommand::AssignRest { artist_index } => {
+                if let Some(artist) = self.artists.get_mut(artist_index)
+                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                {
+                    scheduling::apply_rest(artist);
+                }
+            }
         }
     }
 
@@ -50,6 +106,35 @@ impl GameState {
         let was_last_week_of_year = self.calendar.week == WEEKS_PER_YEAR;
         self.calendar.advance_week();
 
+        // Decrement gig lock timers, collect completed artist IDs
+        let mut completed_gigs = Vec::new();
+        for artist in &mut self.artists {
+            if artist.locked_weeks > 0 {
+                artist.locked_weeks -= 1;
+                if artist.locked_weeks == 0 {
+                    completed_gigs.push(artist.id);
+                }
+            }
+        }
+
+        // Complete gigs — use mem::take to avoid borrow conflict
+        let mut pending = std::mem::take(&mut self.pending_gigs);
+        let mut remaining = Vec::new();
+        for (idx, gig_def) in pending.drain(..) {
+            let is_complete = self
+                .artists
+                .get(idx)
+                .is_some_and(|a| completed_gigs.contains(&a.id));
+            if is_complete {
+                let pay = scheduling::complete_gig(&mut self.artists[idx], &gig_def);
+                self.company.earn(Money(pay));
+            } else {
+                remaining.push((idx, gig_def));
+            }
+        }
+        self.pending_gigs = remaining;
+
+        // Aging, popularity decay, activity reset
         for artist in &mut self.artists {
             if was_last_week_of_year {
                 artist.age += 1;
@@ -59,10 +144,13 @@ impl GameState {
             artist
                 .stats
                 .apply_weekly_popularity_decay(active, artist.inactive_weeks);
-            artist.current_activity = Activity::Idle;
+            if !artist.is_locked() {
+                artist.current_activity = Activity::Idle;
+            }
         }
 
-        let has_pending_income = false; // TODO: check pending gig income in Phase 2
+        // Bankruptcy — pending gigs count as pending income
+        let has_pending_income = !self.pending_gigs.is_empty();
         self.company.update_bankruptcy_counter(has_pending_income);
 
         if self.company.is_bankrupt() {
@@ -78,7 +166,11 @@ mod tests {
     use super::*;
     use crate::attribute::BaseAttributes;
     use crate::config::Settings;
-    use crate::types::ArtistId;
+    use crate::gig::{GigCategory, GigDef};
+    use crate::job::JobDef;
+    use crate::stats::RecognitionTier;
+    use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
+    use crate::types::{ArtistId, GigId, JobId, TrainingId};
 
     fn default_game() -> GameState {
         GameState::new(Settings::default())
@@ -93,6 +185,54 @@ mod tests {
         );
         artist.stats.popularity = pop;
         artist
+    }
+
+    fn sample_training() -> TrainingDef {
+        TrainingDef {
+            id: TrainingId(1),
+            name: "Vocal".to_string(),
+            skill: SkillTarget::Vocal,
+            tiers: vec![TrainingTier {
+                cost: 8_000,
+                base_gain: 40,
+                stress_increase: 5,
+                unlock_threshold: 0,
+            }],
+            primary_attribute: PrimaryAttribute::Empathy,
+            secondary_attribute: None,
+        }
+    }
+
+    fn sample_job() -> JobDef {
+        JobDef {
+            id: JobId(1),
+            name: "Street".to_string(),
+            pay: 600,
+            skill_gains: vec![(SkillTarget::Vocal, 15)],
+            skill_losses: vec![],
+            recognition_gain: 3,
+            stress_change: 3,
+            required_recognition_tier: RecognitionTier::Unknown,
+        }
+    }
+
+    fn sample_gig() -> GigDef {
+        GigDef {
+            id: GigId(1),
+            name: "Single".to_string(),
+            category: GigCategory::Music,
+            duration_weeks: 2,
+            required_recognition_tier: RecognitionTier::Unknown,
+            skill_weights: vec![(SkillTarget::Vocal, 1.0)],
+            base_pay: 50_000,
+            recognition_reward: 50,
+            reputation_reward: 3,
+            stress_cost: 10,
+            ideal_image_tags: vec![],
+            conflicting_image_tags: vec![],
+            personality_preference: None,
+            skill_gains: vec![(SkillTarget::Vocal, 30)],
+        }
     }
 
     #[test]
@@ -156,5 +296,85 @@ mod tests {
             game.process_command(GameCommand::AdvanceWeek);
         }
         assert_eq!(game.phase, GamePhase::GameOver);
+    }
+
+    #[test]
+    fn assign_training_deducts_cost() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(0));
+        game.process_command(GameCommand::AssignTraining {
+            artist_index: 0,
+            training: sample_training(),
+        });
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.company.balance, Money(1_000_000 - 8_000));
+        assert_eq!(game.artists[0].skills.vocal, 40);
+    }
+
+    #[test]
+    fn assign_job_earns_money() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(0));
+        game.process_command(GameCommand::AssignJob {
+            artist_index: 0,
+            job: sample_job(),
+        });
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.company.balance, Money(1_000_000 + 600));
+        assert_eq!(game.artists[0].skills.vocal, 15);
+    }
+
+    #[test]
+    fn assign_gig_locks_and_completes() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(50));
+        game.process_command(GameCommand::AssignGig {
+            artist_index: 0,
+            gig: sample_gig(),
+        });
+
+        // Week 1: locked_weeks goes from 2 to 1
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.artists[0].locked_weeks, 1);
+        assert_eq!(game.artists[0].current_activity, Activity::Gig);
+        // Popularity: 50, gig is public so no inactivity penalty, base_decay -2 → 48
+
+        // Week 2: gig completes (locked_weeks 1→0), rewards applied
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.artists[0].locked_weeks, 0);
+        assert_eq!(game.artists[0].skills.vocal, 30);
+        // Pay: base 50000, popularity was 48 at completion → modifier 1.0+(48-50)/200=0.99 → 49500
+        assert_eq!(game.company.balance, Money(1_000_000 + 49_500));
+    }
+
+    #[test]
+    fn locked_artist_cannot_be_reassigned() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(0));
+        game.process_command(GameCommand::AssignGig {
+            artist_index: 0,
+            gig: sample_gig(),
+        });
+        game.process_command(GameCommand::AdvanceWeek);
+        assert!(game.artists[0].is_locked());
+        // Try training while locked — should be ignored
+        game.process_command(GameCommand::AssignTraining {
+            artist_index: 0,
+            training: sample_training(),
+        });
+        game.process_command(GameCommand::AdvanceWeek);
+        // Only gig rewards (30), no training gains
+        assert_eq!(game.artists[0].skills.vocal, 30);
+    }
+
+    #[test]
+    fn rest_reduces_stress() {
+        let mut game = default_game();
+        let mut artist = make_artist_with_popularity(0);
+        artist.stats.stress = 40;
+        game.artists.push(artist);
+        game.process_command(GameCommand::AssignRest { artist_index: 0 });
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.artists[0].stats.stress, 20);
     }
 }
