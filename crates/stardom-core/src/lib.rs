@@ -7,6 +7,7 @@ pub mod data_loader;
 pub mod game;
 pub mod persona;
 pub mod stats;
+pub mod training;
 pub mod types;
 
 #[cfg(test)]
