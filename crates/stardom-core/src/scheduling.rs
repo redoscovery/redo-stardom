@@ -176,9 +176,9 @@ mod tests {
         artist.stats.stress = 0;
         apply_training(&mut artist, &make_vocal_training());
         assert_eq!(
-            artist.skills.vocal,
-            SKILL_MAX,
-            "vocal should be clamped at SKILL_MAX, not {}", artist.skills.vocal
+            artist.skills.vocal, SKILL_MAX,
+            "vocal should be clamped at SKILL_MAX, not {}",
+            artist.skills.vocal
         );
     }
 

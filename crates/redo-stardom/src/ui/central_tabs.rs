@@ -118,10 +118,7 @@ fn tab_artist(
         }
         ui.label("-- 打工 --");
         for job in &job_defs {
-            if ui
-                .button(format!("{} (+${})", job.name, job.pay))
-                .clicked()
-            {
+            if ui.button(format!("{} (+${})", job.name, job.pay)).clicked() {
                 new_plan = Some(PlannedActivity::Job(job.clone()));
             }
         }
@@ -162,23 +159,42 @@ fn tab_artist(
 
         ui.add_space(4.0);
         ui.heading("內在特質");
-        ui.label(format!("自信：{}  叛逆：{}", artist.traits.confidence, artist.traits.rebellion));
+        ui.label(format!(
+            "自信：{}  叛逆：{}",
+            artist.traits.confidence, artist.traits.rebellion
+        ));
 
         ui.add_space(4.0);
         ui.heading("性格光譜");
         ui.label(format!(
             "社交：{} ({})  思維：{} ({})",
             artist.personality.social,
-            if artist.personality.social < 0 { "內斂" } else { "外放" },
+            if artist.personality.social < 0 {
+                "內斂"
+            } else {
+                "外放"
+            },
             artist.personality.thinking,
-            if artist.personality.thinking < 0 { "直覺" } else { "邏輯" },
+            if artist.personality.thinking < 0 {
+                "直覺"
+            } else {
+                "邏輯"
+            },
         ));
         ui.label(format!(
             "行事：{} ({})  處世：{} ({})",
             artist.personality.action,
-            if artist.personality.action < 0 { "謹慎" } else { "冒險" },
+            if artist.personality.action < 0 {
+                "謹慎"
+            } else {
+                "冒險"
+            },
             artist.personality.stance,
-            if artist.personality.stance < 0 { "隨和" } else { "好勝" },
+            if artist.personality.stance < 0 {
+                "隨和"
+            } else {
+                "好勝"
+            },
         ));
 
         ui.add_space(4.0);

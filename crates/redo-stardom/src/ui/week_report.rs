@@ -21,7 +21,9 @@ pub fn week_report_ui(
     report: Option<Res<WeekReport>>,
     mut commands: Commands,
 ) {
-    let Some(report) = report else { return; };
+    let Some(report) = report else {
+        return;
+    };
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

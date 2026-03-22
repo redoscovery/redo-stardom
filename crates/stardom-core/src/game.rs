@@ -990,12 +990,18 @@ mod tests {
         // After 2 weeks the gig should still be in progress
         game.process_command(GameCommand::AdvanceWeek);
         game.process_command(GameCommand::AdvanceWeek);
-        assert!(game.artists[0].is_locked(), "artist should still be locked after 2 weeks");
+        assert!(
+            game.artists[0].is_locked(),
+            "artist should still be locked after 2 weeks"
+        );
         assert_eq!(game.artists[0].current_activity, Activity::Gig);
 
         // Week 3: gig completes
         game.process_command(GameCommand::AdvanceWeek);
-        assert!(!game.artists[0].is_locked(), "artist should be unlocked after 3 weeks");
+        assert!(
+            !game.artists[0].is_locked(),
+            "artist should be unlocked after 3 weeks"
+        );
         assert_eq!(game.artists[0].current_activity, Activity::Idle);
         // Skill reward applied
         assert_eq!(game.artists[0].skills.acting, 20);
