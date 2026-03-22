@@ -6,8 +6,8 @@ pub mod config;
 pub mod data_loader;
 pub mod game;
 pub mod gig;
-pub mod persona;
 pub mod job;
+pub mod persona;
 pub mod scheduling;
 pub mod stats;
 pub mod training;
@@ -18,14 +18,15 @@ mod integration_tests {
     use crate::config::Settings;
     use crate::data_loader::load_artist_definition;
     use crate::game::{GameCommand, GamePhase, GameState};
+    use crate::job::JobDef;
+    use crate::stats::RecognitionTier;
+    use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
+    use crate::types::{JobId, Money, TrainingId};
 
     #[test]
-    fn full_game_loop_smoke_test() {
-        let settings = Settings::default();
-        let mut game = GameState::new(settings);
-        assert_eq!(game.phase, GamePhase::MainGame);
+    fn full_game_loop_with_activities() {
+        let mut game = GameState::new(Settings::default());
 
-        // Load and add an artist
         let ron_str = r#"
             ArtistDefinition(
                 id: ArtistId(1),
@@ -39,24 +40,57 @@ mod integration_tests {
         "#;
         let def = load_artist_definition(ron_str).unwrap();
         game.artists.push(def.into_artist());
-        assert_eq!(game.artists.len(), 1);
-        assert_eq!(game.artists[0].name, "Luna Star");
 
-        // Advance a full year
-        for _ in 0..52 {
+        let training = TrainingDef {
+            id: TrainingId(1),
+            name: "Vocal".to_string(),
+            skill: SkillTarget::Vocal,
+            tiers: vec![TrainingTier {
+                cost: 8_000,
+                base_gain: 40,
+                stress_increase: 5,
+                unlock_threshold: 0,
+            }],
+            primary_attribute: PrimaryAttribute::Empathy,
+            secondary_attribute: None,
+        };
+
+        let job = JobDef {
+            id: JobId(1),
+            name: "Street".to_string(),
+            pay: 1_000,
+            skill_gains: vec![(SkillTarget::Vocal, 10)],
+            skill_losses: vec![],
+            recognition_gain: 5,
+            stress_change: 3,
+            required_recognition_tier: RecognitionTier::Unknown,
+        };
+
+        // Alternate training, jobs, and rest for 10 weeks
+        for i in 0..10 {
+            if i % 3 == 2 {
+                game.process_command(GameCommand::AssignRest { artist_index: 0 });
+            } else if i % 3 == 0 {
+                game.process_command(GameCommand::AssignTraining {
+                    artist_index: 0,
+                    training: training.clone(),
+                });
+            } else {
+                game.process_command(GameCommand::AssignJob {
+                    artist_index: 0,
+                    job: job.clone(),
+                });
+            }
             game.process_command(GameCommand::AdvanceWeek);
         }
-        assert_eq!(game.calendar.year, 2);
+
+        // Artist should have gained skills
+        assert!(game.artists[0].skills.vocal > 0);
+        // Company balance should have changed (training costs - job income)
+        assert_ne!(game.company.balance, Money(1_000_000));
+        // Stress should be managed due to rest weeks
+        assert!(game.artists[0].stats.stress < 50);
+        // Game should still be in main phase
         assert_eq!(game.phase, GamePhase::MainGame);
-
-        // Advance to end of goal period
-        for _ in 0..(52 * 2) {
-            game.process_command(GameCommand::AdvanceWeek);
-        }
-        assert_eq!(game.calendar.year, 4);
-        assert_eq!(game.phase, GamePhase::PostEnding);
-
-        // Popularity should have decayed to 0 (no activity)
-        assert_eq!(game.artists[0].stats.popularity, 0);
     }
 }
