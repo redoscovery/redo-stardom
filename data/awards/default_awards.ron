@@ -1,0 +1,58 @@
+[
+    // Model Award - ceremony in September
+    AwardDef(
+        id: AwardId(1),
+        name: "Best Model of the Year",
+        ceremony_month: 9,
+        nomination_month: 8,
+        scoring_skills: [
+            (Poise, 1.0),
+        ],
+        scoring_image_tags: [
+            (Sexy, 0.5),
+            (Cool, 0.3),
+        ],
+        requires_gig_category: Some(Modeling),
+        ai_competitor_score: 3000,
+        recognition_boost: 500,
+        reputation_boost: 5,
+    ),
+    // Music Award - ceremony in November
+    AwardDef(
+        id: AwardId(2),
+        name: "Best Music Artist of the Year",
+        ceremony_month: 11,
+        nomination_month: 10,
+        scoring_skills: [
+            (Vocal, 0.8),
+            (Dance, 0.2),
+        ],
+        scoring_image_tags: [
+            (Pure, 0.3),
+            (Mysterious, 0.2),
+        ],
+        requires_gig_category: Some(Music),
+        ai_competitor_score: 4000,
+        recognition_boost: 800,
+        reputation_boost: 8,
+    ),
+    // Film Award - ceremony in December
+    AwardDef(
+        id: AwardId(3),
+        name: "Best Film Performance",
+        ceremony_month: 12,
+        nomination_month: 11,
+        scoring_skills: [
+            (Acting, 1.0),
+            (Eloquence, 0.3),
+        ],
+        scoring_image_tags: [
+            (Intellectual, 0.4),
+            (Mysterious, 0.3),
+        ],
+        requires_gig_category: Some(FilmTv),
+        ai_competitor_score: 3500,
+        recognition_boost: 700,
+        reputation_boost: 7,
+    ),
+]
