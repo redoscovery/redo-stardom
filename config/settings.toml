@@ -1,0 +1,5 @@
+# REDÓ Stardom — Game Settings
+goal_years = 3
+retirement_age = 40
+max_artists = 3
+starting_balance = 1_000_000
