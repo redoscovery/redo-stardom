@@ -44,11 +44,11 @@ impl WeekPlan {
     }
 
     /// Check whether all non-locked artists have been assigned an activity.
+    /// Returns true if there are no non-locked artists (all busy with gigs).
     pub fn all_assigned(&self, non_locked_indices: &[usize]) -> bool {
-        !non_locked_indices.is_empty()
-            && non_locked_indices
-                .iter()
-                .all(|idx| self.assignments.contains_key(idx))
+        non_locked_indices
+            .iter()
+            .all(|idx| self.assignments.contains_key(idx))
     }
 
     pub fn clear(&mut self) {
