@@ -6,6 +6,7 @@ pub mod config;
 pub mod data_loader;
 pub mod game;
 pub mod persona;
+pub mod job;
 pub mod stats;
 pub mod training;
 pub mod types;

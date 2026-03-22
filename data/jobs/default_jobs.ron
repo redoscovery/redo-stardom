@@ -1,0 +1,33 @@
+// Default part-time job definitions
+[
+    JobDef(
+        id: JobId(1),
+        name: "Convenience Store Clerk",
+        pay: 5000,
+        skill_gains: [(Eloquence, 5)],
+        skill_losses: [],
+        recognition_gain: 2,
+        stress_change: 3,
+        required_recognition_tier: Unknown,
+    ),
+    JobDef(
+        id: JobId(2),
+        name: "TV Commercial",
+        pay: 20000,
+        skill_gains: [(Poise, 10), (Eloquence, 5)],
+        skill_losses: [],
+        recognition_gain: 15,
+        stress_change: 5,
+        required_recognition_tier: Rising,
+    ),
+    JobDef(
+        id: JobId(3),
+        name: "Variety Show Guest",
+        pay: 50000,
+        skill_gains: [(Eloquence, 15), (Creativity, 8)],
+        skill_losses: [],
+        recognition_gain: 40,
+        stress_change: 8,
+        required_recognition_tier: Established,
+    ),
+]
