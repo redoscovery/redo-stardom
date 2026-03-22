@@ -9,6 +9,8 @@ use crate::states::AppState;
 
 use super::SelectedArtist;
 use super::display::{office_tier_text, recognition_tier_text};
+use super::week_plan::{PlannedActivity, WeekPlan};
+use super::week_report::WeekReport;
 
 pub struct GigMarketPlugin;
 
@@ -16,7 +18,7 @@ impl Plugin for GigMarketPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             EguiPrimaryContextPass,
-            gig_market_ui.run_if(in_state(AppState::InGame)),
+            gig_market_ui.run_if(in_state(AppState::InGame).and(not(resource_exists::<WeekReport>))),
         );
     }
 }
@@ -25,6 +27,7 @@ fn gig_market_ui(
     mut contexts: EguiContexts,
     mut game: ResMut<GameWorld>,
     selected: Res<SelectedArtist>,
+    mut week_plan: ResMut<WeekPlan>,
 ) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
@@ -69,10 +72,7 @@ fn gig_market_ui(
                                 ));
                                 if let Some(idx) = selected.0 {
                                     if ui.button("接下通告").clicked() {
-                                        pending_cmd = Some(GameCommand::AssignGig {
-                                            artist_index: idx,
-                                            gig: gig.clone(),
-                                        });
+                                        week_plan.assign(idx, PlannedActivity::Gig(gig.clone()));
                                     }
                                 } else {
                                     ui.label("(請先選擇一位藝人)");

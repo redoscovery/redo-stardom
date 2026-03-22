@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
-use stardom_core::game::GameCommand;
-use stardom_core::types::Activity;
 
 use crate::data_loading::GameCatalogs;
 use crate::game_bridge::GameWorld;
@@ -9,6 +7,8 @@ use crate::states::AppState;
 
 use super::SelectedArtist;
 use super::display::{activity_text, recognition_tier_text};
+use super::week_plan::{PlannedActivity, WeekPlan};
+use super::week_report::WeekReport;
 
 pub struct ArtistPanelPlugin;
 
@@ -16,16 +16,17 @@ impl Plugin for ArtistPanelPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             EguiPrimaryContextPass,
-            artist_panel_ui.run_if(in_state(AppState::InGame)),
+            artist_panel_ui.run_if(in_state(AppState::InGame).and(not(resource_exists::<WeekReport>))),
         );
     }
 }
 
 fn artist_panel_ui(
     mut contexts: EguiContexts,
-    mut game: ResMut<GameWorld>,
+    game: Res<GameWorld>,
     selected: Res<SelectedArtist>,
     catalogs: Option<Res<GameCatalogs>>,
+    mut week_plan: ResMut<WeekPlan>,
 ) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
@@ -58,8 +59,12 @@ fn artist_panel_ui(
         .map(|c| c.jobs.clone())
         .unwrap_or_default();
 
-    // Collect all pending commands, then apply after UI rendering
-    let mut pending_cmd: Option<GameCommand> = None;
+    // Snapshot current plan for this artist
+    let current_plan_label = week_plan.get(idx).map(|a| a.label());
+
+    // Collect planned activity to assign, or cancel flag
+    let mut new_plan: Option<PlannedActivity> = None;
+    let mut cancel_plan = false;
 
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.heading(&artist.name);
@@ -173,20 +178,24 @@ fn artist_panel_ui(
                 // Activity assignment
                 cols[1].heading("安排活動");
                 if artist.is_locked() {
-                    cols[1].label(format!("[鎖定] 通告中（剩餘 {} 週）", artist.locked_weeks));
-                } else if artist.current_activity != Activity::Idle {
-                    cols[1].label(format!("[已安排] {}", activity_text(&artist.current_activity)));
-                    cols[1].label("按「推進一週」執行。");
+                    cols[1].label(format!(
+                        "[鎖定] 通告中（剩餘 {} 週）",
+                        artist.locked_weeks
+                    ));
+                } else if let Some(label) = &current_plan_label {
+                    // Already have a planned activity — show it with cancel option
+                    cols[1].label(format!("[已安排] {}", label));
+                    if cols[1].button("取消").clicked() {
+                        cancel_plan = true;
+                    }
                 } else {
+                    // No plan yet — show activity buttons
                     // Training options from catalogs
                     for training in &training_defs {
                         let cost = training.tiers.first().map(|t| t.cost).unwrap_or(0);
                         let label = format!("{} (${cost})", training.name);
                         if cols[1].button(&label).clicked() {
-                            pending_cmd = Some(GameCommand::AssignTraining {
-                                artist_index: idx,
-                                training: training.clone(),
-                            });
+                            new_plan = Some(PlannedActivity::Training(training.clone()));
                         }
                     }
 
@@ -196,24 +205,23 @@ fn artist_panel_ui(
                     for job in &job_defs {
                         let label = format!("{} (+${})", job.name, job.pay);
                         if cols[1].button(&label).clicked() {
-                            pending_cmd = Some(GameCommand::AssignJob {
-                                artist_index: idx,
-                                job: job.clone(),
-                            });
+                            new_plan = Some(PlannedActivity::Job(job.clone()));
                         }
                     }
 
                     cols[1].add_space(4.0);
                     if cols[1].button("休息").clicked() {
-                        pending_cmd = Some(GameCommand::AssignRest { artist_index: idx });
+                        new_plan = Some(PlannedActivity::Rest);
                     }
                 }
             });
         });
     });
 
-    // Apply any pending command after UI rendering is done
-    if let Some(cmd) = pending_cmd {
-        game.command(cmd);
+    // Apply plan changes after UI rendering
+    if cancel_plan {
+        week_plan.cancel(idx);
+    } else if let Some(activity) = new_plan {
+        week_plan.assign(idx, activity);
     }
 }
