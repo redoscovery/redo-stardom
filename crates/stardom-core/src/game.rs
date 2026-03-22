@@ -124,50 +124,59 @@ impl GameState {
                 }
             }
             GameCommand::UpgradeOffice => {
-                if let Some(upgrade) = office::next_upgrade(self.company.office_tier, &self.office_upgrades) {
-                    if office::can_afford(self.company.balance, upgrade) {
-                        let cost = upgrade.cost;
-                        let tier = upgrade.tier;
-                        self.company.spend(cost);
-                        self.company.office_tier = tier;
-                    }
+                if let Some(upgrade) =
+                    office::next_upgrade(self.company.office_tier, &self.office_upgrades)
+                    && office::can_afford(self.company.balance, upgrade)
+                {
+                    let cost = upgrade.cost;
+                    let tier = upgrade.tier;
+                    self.company.spend(cost);
+                    self.company.office_tier = tier;
                 }
             }
             GameCommand::DowngradeOffice => {
-                let refund = office::downgrade_refund(self.company.office_tier, &self.office_upgrades);
+                let refund =
+                    office::downgrade_refund(self.company.office_tier, &self.office_upgrades);
                 if refund.0 > 0 {
                     self.company.earn(refund);
                     // Find previous tier: the tier just before current in upgrades list
                     let current = self.company.office_tier;
-                    let prev_tier = self.office_upgrades
+                    let prev_tier = self
+                        .office_upgrades
                         .iter()
-                        .filter(|u| u.tier < current)
-                        .last()
+                        .rfind(|u| u.tier < current)
                         .map(|u| u.tier)
                         .unwrap_or(crate::company::OfficeTier::Starter);
                     self.company.office_tier = prev_tier;
                 }
             }
-            GameCommand::RespondToCrisis { crisis_index, choice } => {
+            GameCommand::RespondToCrisis {
+                crisis_index,
+                choice,
+            } => {
                 if crisis_index < self.active_crises.len() {
                     let (artist_idx, crisis) = self.active_crises.remove(crisis_index);
-                    if let Some(effect) = crisis.resolve(choice) {
-                        if let Some(artist) = self.artists.get_mut(artist_idx) {
-                            artist.stats.reputation += effect.reputation_change;
-                            artist.stats.popularity += effect.popularity_change;
-                            artist.stats.stress += effect.stress_change;
-                            for (tag, delta) in &effect.image_tag_changes {
-                                match tag {
-                                    crate::persona::ImageTag::Pure => artist.image.pure += delta,
-                                    crate::persona::ImageTag::Sexy => artist.image.sexy += delta,
-                                    crate::persona::ImageTag::Cool => artist.image.cool += delta,
-                                    crate::persona::ImageTag::Intellectual => artist.image.intellectual += delta,
-                                    crate::persona::ImageTag::Funny => artist.image.funny += delta,
-                                    crate::persona::ImageTag::Mysterious => artist.image.mysterious += delta,
+                    if let Some(effect) = crisis.resolve(choice)
+                        && let Some(artist) = self.artists.get_mut(artist_idx)
+                    {
+                        artist.stats.reputation += effect.reputation_change;
+                        artist.stats.popularity += effect.popularity_change;
+                        artist.stats.stress += effect.stress_change;
+                        for (tag, delta) in &effect.image_tag_changes {
+                            match tag {
+                                crate::persona::ImageTag::Pure => artist.image.pure += delta,
+                                crate::persona::ImageTag::Sexy => artist.image.sexy += delta,
+                                crate::persona::ImageTag::Cool => artist.image.cool += delta,
+                                crate::persona::ImageTag::Intellectual => {
+                                    artist.image.intellectual += delta
+                                }
+                                crate::persona::ImageTag::Funny => artist.image.funny += delta,
+                                crate::persona::ImageTag::Mysterious => {
+                                    artist.image.mysterious += delta
                                 }
                             }
-                            artist.image.clamp();
                         }
+                        artist.image.clamp();
                     }
                 }
             }
@@ -195,7 +204,8 @@ impl GameState {
                     let pay = scheduling::complete_gig(artist, gig_def);
                     self.company.earn(Money(pay));
                     // Track completed gig category
-                    self.completed_gig_categories.push((artist.id, gig_def.category));
+                    self.completed_gig_categories
+                        .push((artist.id, gig_def.category));
                     false
                 } else {
                     true
@@ -513,10 +523,7 @@ mod tests {
         game.process_command(GameCommand::UpgradeOffice); // Standard, upkeep 2000
         let balance_after_upgrade = game.company.balance;
         game.process_command(GameCommand::AdvanceWeek);
-        assert_eq!(
-            game.company.balance,
-            balance_after_upgrade - Money(2_000)
-        );
+        assert_eq!(game.company.balance, balance_after_upgrade - Money(2_000));
     }
 
     #[test]

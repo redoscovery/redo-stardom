@@ -67,10 +67,7 @@ mod tests {
             ceremony_month: 9,
             nomination_month: 8,
             scoring_skills: vec![(SkillTarget::Poise, 1.0)],
-            scoring_image_tags: vec![
-                (ImageTag::Sexy, 0.5),
-                (ImageTag::Cool, 0.3),
-            ],
+            scoring_image_tags: vec![(ImageTag::Sexy, 0.5), (ImageTag::Cool, 0.3)],
             requires_gig_category,
             ai_competitor_score,
             recognition_boost: 500,

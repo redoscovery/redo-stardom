@@ -15,7 +15,10 @@ pub struct OfficeUpgradeDef {
 }
 
 /// Assumes upgrades slice is sorted by tier ascending.
-pub fn next_upgrade<'a>(current: OfficeTier, upgrades: &'a [OfficeUpgradeDef]) -> Option<&'a OfficeUpgradeDef> {
+pub fn next_upgrade(
+    current: OfficeTier,
+    upgrades: &[OfficeUpgradeDef],
+) -> Option<&OfficeUpgradeDef> {
     upgrades.iter().find(|u| u.tier > current)
 }
 
@@ -112,7 +115,10 @@ mod tests {
         // Starter not in list → 0
         assert_eq!(get_weekly_upkeep(OfficeTier::Starter, &upgrades), Money(0));
         // Standard → 2000
-        assert_eq!(get_weekly_upkeep(OfficeTier::Standard, &upgrades), Money(2_000));
+        assert_eq!(
+            get_weekly_upkeep(OfficeTier::Standard, &upgrades),
+            Money(2_000)
+        );
     }
 
     #[test]
@@ -129,7 +135,10 @@ mod tests {
         assert_eq!(deserialized.tier, def.tier);
         assert_eq!(deserialized.cost, def.cost);
         assert_eq!(deserialized.max_artists_bonus, def.max_artists_bonus);
-        assert_eq!(deserialized.training_cost_discount_pct, def.training_cost_discount_pct);
+        assert_eq!(
+            deserialized.training_cost_discount_pct,
+            def.training_cost_discount_pct
+        );
         assert_eq!(deserialized.weekly_upkeep, def.weekly_upkeep);
     }
 }

@@ -37,7 +37,10 @@ impl CrisisDef {
 
     /// Returns None if choices is empty.
     pub fn resolve(&self, choice_index: usize) -> Option<CrisisEffect> {
-        let choice = self.choices.get(choice_index).or_else(|| self.choices.first())?;
+        let choice = self
+            .choices
+            .get(choice_index)
+            .or_else(|| self.choices.first())?;
         Some(CrisisEffect {
             reputation_change: choice.reputation_change,
             popularity_change: choice.popularity_change,

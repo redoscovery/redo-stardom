@@ -86,15 +86,19 @@ mod tests {
 
         let pool_a = generate_pool(&catalog, true);
         assert_eq!(pool_a.len(), 2);
-        assert!(pool_a
-            .iter()
-            .all(|g| matches!(g.category, GigCategory::Music | GigCategory::FilmTv)));
+        assert!(
+            pool_a
+                .iter()
+                .all(|g| matches!(g.category, GigCategory::Music | GigCategory::FilmTv))
+        );
 
         let pool_b = generate_pool(&catalog, false);
         assert_eq!(pool_b.len(), 1);
-        assert!(pool_b
-            .iter()
-            .all(|g| !matches!(g.category, GigCategory::Music | GigCategory::FilmTv)));
+        assert!(
+            pool_b
+                .iter()
+                .all(|g| !matches!(g.category, GigCategory::Music | GigCategory::FilmTv))
+        );
     }
 
     #[test]
