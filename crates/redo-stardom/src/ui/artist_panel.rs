@@ -8,6 +8,7 @@ use crate::game_bridge::GameWorld;
 use crate::states::AppState;
 
 use super::SelectedArtist;
+use super::display::{activity_text, recognition_tier_text};
 
 pub struct ArtistPanelPlugin;
 
@@ -34,7 +35,7 @@ fn artist_panel_ui(
     let Some(idx) = selected.0 else {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.centered_and_justified(|ui| {
-                ui.label("Select an artist from the roster.");
+                ui.label("請從藝人名冊選擇一位藝人。");
             });
         });
         return;
@@ -42,7 +43,7 @@ fn artist_panel_ui(
 
     let Some(artist) = game.0.artists.get(idx).cloned() else {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("Invalid artist selection.");
+            ui.label("選擇無效。");
         });
         return;
     };
@@ -63,14 +64,12 @@ fn artist_panel_ui(
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.heading(&artist.name);
         ui.label(format!(
-            "Age: {} | Activity: {:?}",
-            artist.age, artist.current_activity
+            "年齡：{} | 活動：{}",
+            artist.age,
+            activity_text(&artist.current_activity)
         ));
         if artist.is_locked() {
-            ui.label(format!(
-                "Locked in gig for {} more weeks",
-                artist.locked_weeks
-            ));
+            ui.label(format!("🔒 通告進行中，剩餘 {} 週", artist.locked_weeks));
         }
         ui.separator();
 
@@ -78,104 +77,104 @@ fn artist_panel_ui(
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.columns(2, |cols| {
                 // Left column: attributes and stats
-                cols[0].heading("Base Attributes");
-                cols[0].label(format!("Stamina: {}", artist.base_attributes.stamina));
-                cols[0].label(format!("Intellect: {}", artist.base_attributes.intellect));
-                cols[0].label(format!("Empathy: {}", artist.base_attributes.empathy));
-                cols[0].label(format!("Charm: {}", artist.base_attributes.charm));
+                cols[0].heading("基礎屬性");
+                cols[0].label(format!("體能：{}", artist.base_attributes.stamina));
+                cols[0].label(format!("智識：{}", artist.base_attributes.intellect));
+                cols[0].label(format!("共情：{}", artist.base_attributes.empathy));
+                cols[0].label(format!("魅力：{}", artist.base_attributes.charm));
                 cols[0].add_space(8.0);
 
-                cols[0].heading("Professional Skills");
+                cols[0].heading("專業技能");
                 let skills = &artist.skills;
                 for (name, val) in [
-                    ("Vocal", skills.vocal),
-                    ("Acting", skills.acting),
-                    ("Dance", skills.dance),
-                    ("Poise", skills.poise),
-                    ("Eloquence", skills.eloquence),
-                    ("Creativity", skills.creativity),
+                    ("歌藝", skills.vocal),
+                    ("演技", skills.acting),
+                    ("舞藝", skills.dance),
+                    ("儀態", skills.poise),
+                    ("口才", skills.eloquence),
+                    ("創作", skills.creativity),
                 ] {
                     cols[0].horizontal(|ui| {
-                        ui.label(format!("{name:>10}: {val:>5}"));
+                        ui.label(format!("{name:>4}：{val:>5}"));
                         ui.add(egui::ProgressBar::new(val as f32 / 10000.0).desired_width(120.0));
                     });
                 }
                 cols[0].add_space(8.0);
 
-                cols[0].heading("Inner Traits");
-                cols[0].label(format!("Confidence: {}", artist.traits.confidence));
-                cols[0].label(format!("Rebellion: {}", artist.traits.rebellion));
+                cols[0].heading("內在特質");
+                cols[0].label(format!("自信：{}", artist.traits.confidence));
+                cols[0].label(format!("叛逆：{}", artist.traits.rebellion));
                 cols[0].add_space(8.0);
 
-                cols[0].heading("Personality");
+                cols[0].heading("性格光譜");
                 cols[0].label(format!(
-                    "Social: {} ({})",
+                    "社交：{} ({})",
                     artist.personality.social,
                     if artist.personality.social < 0 {
-                        "Introvert"
+                        "內斂"
                     } else {
-                        "Extrovert"
+                        "外放"
                     }
                 ));
                 cols[0].label(format!(
-                    "Thinking: {} ({})",
+                    "思維：{} ({})",
                     artist.personality.thinking,
                     if artist.personality.thinking < 0 {
-                        "Intuitive"
+                        "直覺"
                     } else {
-                        "Logical"
+                        "邏輯"
                     }
                 ));
                 cols[0].label(format!(
-                    "Action: {} ({})",
+                    "行事：{} ({})",
                     artist.personality.action,
                     if artist.personality.action < 0 {
-                        "Cautious"
+                        "謹慎"
                     } else {
-                        "Adventurous"
+                        "冒險"
                     }
                 ));
                 cols[0].label(format!(
-                    "Stance: {} ({})",
+                    "處世：{} ({})",
                     artist.personality.stance,
                     if artist.personality.stance < 0 {
-                        "Easygoing"
+                        "隨和"
                     } else {
-                        "Competitive"
+                        "好勝"
                     }
                 ));
 
                 // Right column: image tags, aux stats, activity assignment
-                cols[1].heading("Image Tags");
+                cols[1].heading("形象標籤");
                 let img = &artist.image;
                 for (name, val) in [
-                    ("Pure", img.pure),
-                    ("Sexy", img.sexy),
-                    ("Cool", img.cool),
-                    ("Intellectual", img.intellectual),
-                    ("Funny", img.funny),
-                    ("Mysterious", img.mysterious),
+                    ("清純", img.pure),
+                    ("性感", img.sexy),
+                    ("酷帥", img.cool),
+                    ("知性", img.intellectual),
+                    ("搞笑", img.funny),
+                    ("神秘", img.mysterious),
                 ] {
-                    cols[1].label(format!("{name}: {val}"));
+                    cols[1].label(format!("{name}：{val}"));
                 }
                 cols[1].add_space(8.0);
 
-                cols[1].heading("Market Status");
+                cols[1].heading("市場狀態");
                 cols[1].label(format!(
-                    "Recognition: {} ({:?})",
+                    "知名度：{} ({})",
                     artist.stats.recognition,
-                    artist.stats.recognition_tier()
+                    recognition_tier_text(artist.stats.recognition_tier())
                 ));
-                cols[1].label(format!("Reputation: {}", artist.stats.reputation));
-                cols[1].label(format!("Popularity: {}", artist.stats.popularity));
-                cols[1].label(format!("Stress: {}", artist.stats.stress));
+                cols[1].label(format!("風評：{}", artist.stats.reputation));
+                cols[1].label(format!("人氣：{}", artist.stats.popularity));
+                cols[1].label(format!("壓力：{}", artist.stats.stress));
                 cols[1].add_space(16.0);
 
                 // Activity assignment
-                cols[1].heading("Assign Activity");
+                cols[1].heading("安排活動");
                 let is_busy = artist.is_locked() || artist.current_activity != Activity::Idle;
                 if is_busy {
-                    cols[1].label("Artist is busy this week.");
+                    cols[1].label("本週藝人已有安排。");
                 } else {
                     // Training options from catalogs
                     for training in &training_defs {
@@ -203,7 +202,7 @@ fn artist_panel_ui(
                     }
 
                     cols[1].add_space(4.0);
-                    if cols[1].button("Rest").clicked() {
+                    if cols[1].button("休息").clicked() {
                         pending_cmd = Some(GameCommand::AssignRest { artist_index: idx });
                     }
                 }

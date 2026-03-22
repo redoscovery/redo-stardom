@@ -5,6 +5,8 @@ use stardom_core::game::GameCommand;
 use crate::game_bridge::GameWorld;
 use crate::states::AppState;
 
+use super::display::{office_tier_text, phase_text};
+
 pub struct HudPlugin;
 
 impl Plugin for HudPlugin {
@@ -24,23 +26,26 @@ fn hud_ui(mut contexts: EguiContexts, mut game: ResMut<GameWorld>) {
         ui.horizontal(|ui| {
             let g = &game.0;
             ui.label(format!(
-                "Year {} / Week {}",
+                "第 {} 年 / 第 {} 週",
                 g.calendar.year, g.calendar.week
             ));
             ui.separator();
             ui.label(format!("${}", g.company.balance.0));
             ui.separator();
-            ui.label(format!("Office: {:?}", g.company.office_tier));
+            ui.label(format!(
+                "辦公室：{}",
+                office_tier_text(g.company.office_tier)
+            ));
             ui.separator();
             ui.label(format!(
-                "Artists: {}/{}",
+                "藝人：{}/{}",
                 g.artists.len(),
                 g.company.max_artists
             ));
             ui.separator();
-            ui.label(format!("{:?}", g.phase));
+            ui.label(phase_text(g.phase));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.button("Advance Week").clicked() {
+                if ui.button("推進一週").clicked() {
                     game.command(GameCommand::AdvanceWeek);
                 }
             });

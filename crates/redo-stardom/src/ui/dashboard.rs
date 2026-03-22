@@ -5,6 +5,7 @@ use crate::game_bridge::GameWorld;
 use crate::states::AppState;
 
 use super::SelectedArtist;
+use super::display::activity_text;
 
 pub struct DashboardPlugin;
 
@@ -28,21 +29,21 @@ fn dashboard_ui(
     egui::SidePanel::left("roster")
         .min_width(220.0)
         .show(ctx, |ui| {
-            ui.heading("Artists");
+            ui.heading("藝人名冊");
             ui.separator();
             if game.0.artists.is_empty() {
-                ui.label("No artists signed yet.");
-                ui.label("Use Recruitment to scout talent.");
+                ui.label("尚未簽約任何藝人。");
+                ui.label("前往招募頁面發掘人才。");
             }
             for (i, artist) in game.0.artists.iter().enumerate() {
                 let is_selected = selected.0 == Some(i);
                 let text = format!(
-                    "{} (Age {})\n  Pop: {} | Stress: {} | {:?}",
+                    "{} ({}歲)\n  人氣：{} | 壓力：{} | {}",
                     artist.name,
                     artist.age,
                     artist.stats.popularity,
                     artist.stats.stress,
-                    artist.current_activity,
+                    activity_text(&artist.current_activity),
                 );
                 if ui.selectable_label(is_selected, text).clicked() {
                     selected.0 = Some(i);

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 pub mod artist_panel;
 pub mod dashboard;
+pub mod display;
 pub mod events;
 pub mod gig_market;
 pub mod hud;

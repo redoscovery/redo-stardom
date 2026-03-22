@@ -51,19 +51,19 @@ fn events_ui(mut contexts: EguiContexts, mut game: ResMut<GameWorld>) {
 
     let mut pending_response: Option<(usize, usize)> = None;
 
-    egui::Window::new("Crisis Event")
+    egui::Window::new("⚠️ 公關危機")
         .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
         .collapsible(false)
         .resizable(false)
         .show(ctx, |ui| {
             for (crisis_idx, artist_name, name, description, choices) in &crises {
                 ui.heading(name);
-                ui.label(format!("Affected artist: {}", artist_name));
+                ui.label(format!("受影響藝人：{}", artist_name));
                 ui.label(description.as_str());
                 ui.separator();
                 for (choice_idx, choice) in choices.iter().enumerate() {
                     let label = format!(
-                        "{} (Rep {:+}, Pop {:+}, Stress {:+})",
+                        "{} (風評 {:+}，人氣 {:+}，壓力 {:+})",
                         choice.label,
                         choice.reputation_change,
                         choice.popularity_change,

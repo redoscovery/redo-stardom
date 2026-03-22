@@ -28,15 +28,11 @@ fn main_menu_ui(
             ui.add_space(150.0);
             ui.heading(egui::RichText::new("REDÓ Stardom").size(48.0));
             ui.add_space(10.0);
-            ui.label(
-                egui::RichText::new("Star Management Simulation")
-                    .size(16.0)
-                    .weak(),
-            );
+            ui.label(egui::RichText::new("明星經紀模擬遊戲").size(16.0).weak());
             ui.add_space(40.0);
 
             if ui
-                .button(egui::RichText::new("  New Game  ").size(24.0))
+                .button(egui::RichText::new("  新遊戲  ").size(24.0))
                 .clicked()
             {
                 let (game_world, catalogs) = GameWorld::new_game();
@@ -46,7 +42,7 @@ fn main_menu_ui(
             }
             ui.add_space(10.0);
             if ui
-                .button(egui::RichText::new("    Quit    ").size(24.0))
+                .button(egui::RichText::new("    結束    ").size(24.0))
                 .clicked()
             {
                 std::process::exit(0);
