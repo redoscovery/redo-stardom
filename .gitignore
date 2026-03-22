@@ -10,3 +10,7 @@ research/
 
 # Rust
 /target
+
+# Font files (large binaries, download separately)
+assets/fonts/*.otf
+assets/fonts/*.ttf
