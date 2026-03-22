@@ -1,1 +1,153 @@
-// TODO: implement
+use serde::{Deserialize, Serialize};
+
+pub const BASE_ATTR_MIN: i32 = 1;
+pub const BASE_ATTR_MAX: i32 = 100;
+pub const SKILL_MIN: i32 = 0;
+pub const SKILL_MAX: i32 = 10_000;
+pub const TRAIT_MIN: i32 = 0;
+pub const TRAIT_MAX: i32 = 100;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BaseAttributes {
+    pub stamina: i32,   // 體能
+    pub intellect: i32, // 智識
+    pub empathy: i32,   // 共情
+    pub charm: i32,     // 魅力
+}
+
+impl Default for BaseAttributes {
+    fn default() -> Self {
+        Self {
+            stamina: 50,
+            intellect: 50,
+            empathy: 50,
+            charm: 50,
+        }
+    }
+}
+
+impl BaseAttributes {
+    pub fn new(stamina: i32, intellect: i32, empathy: i32, charm: i32) -> Self {
+        let mut a = Self {
+            stamina,
+            intellect,
+            empathy,
+            charm,
+        };
+        a.clamp();
+        a
+    }
+
+    pub fn clamp(&mut self) {
+        self.stamina = self.stamina.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
+        self.intellect = self.intellect.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
+        self.empathy = self.empathy.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
+        self.charm = self.charm.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct ProfessionalSkills {
+    pub vocal: i32,      // 歌藝
+    pub acting: i32,     // 演技
+    pub dance: i32,      // 舞藝
+    pub poise: i32,      // 儀態
+    pub eloquence: i32,  // 口才
+    pub creativity: i32, // 創作
+}
+
+impl ProfessionalSkills {
+    pub fn clamp(&mut self) {
+        self.vocal = self.vocal.clamp(SKILL_MIN, SKILL_MAX);
+        self.acting = self.acting.clamp(SKILL_MIN, SKILL_MAX);
+        self.dance = self.dance.clamp(SKILL_MIN, SKILL_MAX);
+        self.poise = self.poise.clamp(SKILL_MIN, SKILL_MAX);
+        self.eloquence = self.eloquence.clamp(SKILL_MIN, SKILL_MAX);
+        self.creativity = self.creativity.clamp(SKILL_MIN, SKILL_MAX);
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InnerTraits {
+    pub confidence: i32, // 自信
+    pub rebellion: i32,  // 叛逆
+}
+
+impl Default for InnerTraits {
+    fn default() -> Self {
+        Self {
+            confidence: 50,
+            rebellion: 30,
+        }
+    }
+}
+
+impl InnerTraits {
+    pub fn clamp(&mut self) {
+        self.confidence = self.confidence.clamp(TRAIT_MIN, TRAIT_MAX);
+        self.rebellion = self.rebellion.clamp(TRAIT_MIN, TRAIT_MAX);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn base_attributes_clamp_to_range() {
+        let mut attrs = BaseAttributes::default();
+        attrs.stamina = 150;
+        attrs.clamp();
+        assert_eq!(attrs.stamina, 100);
+    }
+
+    #[test]
+    fn base_attributes_default_values() {
+        let attrs = BaseAttributes::default();
+        assert_eq!(attrs.stamina, 50);
+        assert_eq!(attrs.intellect, 50);
+        assert_eq!(attrs.empathy, 50);
+        assert_eq!(attrs.charm, 50);
+    }
+
+    #[test]
+    fn professional_skills_start_at_zero() {
+        let skills = ProfessionalSkills::default();
+        assert_eq!(skills.vocal, 0);
+        assert_eq!(skills.acting, 0);
+    }
+
+    #[test]
+    fn professional_skills_clamp_to_max() {
+        let mut skills = ProfessionalSkills::default();
+        skills.vocal = 12_000;
+        skills.clamp();
+        assert_eq!(skills.vocal, 10_000);
+    }
+
+    #[test]
+    fn inner_traits_default() {
+        let traits = InnerTraits::default();
+        assert_eq!(traits.confidence, 50);
+        assert_eq!(traits.rebellion, 30);
+    }
+
+    #[test]
+    fn inner_traits_clamp() {
+        let mut traits = InnerTraits {
+            confidence: 120,
+            rebellion: -5,
+        };
+        traits.clamp();
+        assert_eq!(traits.confidence, 100);
+        assert_eq!(traits.rebellion, 0);
+    }
+
+    #[test]
+    fn serialization_roundtrip() {
+        let attrs = BaseAttributes::new(70, 60, 80, 55);
+        let serialized = ron::to_string(&attrs).unwrap();
+        let deserialized: BaseAttributes = ron::from_str(&serialized).unwrap();
+        assert_eq!(attrs, deserialized);
+    }
+}
