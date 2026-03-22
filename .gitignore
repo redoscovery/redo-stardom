@@ -7,3 +7,6 @@
 
 # Research reference materials (may contain copyrighted content summaries)
 research/
+
+# Rust
+/target

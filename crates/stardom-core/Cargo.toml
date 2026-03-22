@@ -1,0 +1,10 @@
+[package]
+name = "stardom-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+ron = "0.10"
+toml = "0.8"
+rand = "0.9"
