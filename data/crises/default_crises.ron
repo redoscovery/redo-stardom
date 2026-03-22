@@ -1,0 +1,86 @@
+// Default crisis definitions
+[
+    CrisisDef(
+        id: CrisisId(1),
+        name: "Dating Scandal",
+        description: "Photos of you on a date have leaked online. Fans are reacting strongly.",
+        trigger_weight: 15,
+        min_recognition_tier: Newcomer,
+        choices: [
+            CrisisChoice(
+                label: "Deny everything",
+                reputation_change: -10,
+                popularity_change: 5,
+                stress_change: 15,
+                image_tag_changes: [(Pure, -15)],
+            ),
+            CrisisChoice(
+                label: "Come clean with a heartfelt statement",
+                reputation_change: 10,
+                popularity_change: -5,
+                stress_change: 5,
+                image_tag_changes: [(Pure, 5), (Mysterious, -10)],
+            ),
+            CrisisChoice(
+                label: "Stay silent and wait for it to blow over",
+                reputation_change: -5,
+                popularity_change: -10,
+                stress_change: 20,
+                image_tag_changes: [],
+            ),
+        ],
+    ),
+    CrisisDef(
+        id: CrisisId(2),
+        name: "Stalker Incident",
+        description: "A dangerous fan has been spotted outside your residence. Security is involved.",
+        trigger_weight: 8,
+        min_recognition_tier: Rising,
+        choices: [
+            CrisisChoice(
+                label: "File a restraining order publicly",
+                reputation_change: 5,
+                popularity_change: -5,
+                stress_change: 20,
+                image_tag_changes: [(Mysterious, 5)],
+            ),
+            CrisisChoice(
+                label: "Handle it quietly through management",
+                reputation_change: 0,
+                popularity_change: 0,
+                stress_change: 10,
+                image_tag_changes: [],
+            ),
+        ],
+    ),
+    CrisisDef(
+        id: CrisisId(3),
+        name: "Malicious Rumor",
+        description: "An anonymous post claims you behaved rudely behind the scenes. It's going viral.",
+        trigger_weight: 20,
+        min_recognition_tier: Unknown,
+        choices: [
+            CrisisChoice(
+                label: "Address it head-on with a video message",
+                reputation_change: 8,
+                popularity_change: 10,
+                stress_change: 8,
+                image_tag_changes: [(Funny, -5), (Intellectual, 5)],
+            ),
+            CrisisChoice(
+                label: "Laugh it off on social media",
+                reputation_change: -3,
+                popularity_change: 15,
+                stress_change: 3,
+                image_tag_changes: [(Funny, 10)],
+            ),
+            CrisisChoice(
+                label: "Ignore it entirely",
+                reputation_change: -8,
+                popularity_change: -5,
+                stress_change: 5,
+                image_tag_changes: [],
+            ),
+        ],
+    ),
+]
