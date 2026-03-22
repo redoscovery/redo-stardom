@@ -14,7 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "REDÓ Stardom".to_string(),
-                resolution: WindowResolution::new(800, 600),
+                resolution: WindowResolution::new(1024, 768),
                 ..default()
             }),
             ..default()
