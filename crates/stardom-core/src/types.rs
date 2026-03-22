@@ -10,7 +10,7 @@ macro_rules! id_newtype {
     };
 }
 
-id_newtype!(ArtistId, GigId, OutfitId, CrisisId);
+id_newtype!(ArtistId, GigId, OutfitId, CrisisId, TrainingId, JobId);
 
 /// Game currency. Stored as i64 to allow negative balances (debt).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -78,6 +78,14 @@ mod tests {
         let a = Money(1000);
         let b = Money(5000);
         assert_eq!(a - b, Money(-4000));
+    }
+
+    #[test]
+    fn training_id_serialization() {
+        let id = TrainingId(7);
+        let serialized = ron::to_string(&id).unwrap();
+        let deserialized: TrainingId = ron::from_str(&serialized).unwrap();
+        assert_eq!(id, deserialized);
     }
 
     #[test]
