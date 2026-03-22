@@ -29,6 +29,8 @@ pub fn load_game_data(game: &mut GameState) {
     game.office_upgrades = try_load("data/offices/default_offices.ron");
     game.outfit_catalog = try_load("data/outfits/default_outfits.ron");
     game.prospects = try_load("data/artists/default_prospects.ron");
+    game.crisis_catalog = try_load("data/crises/default_crises.ron");
+    game.award_defs = try_load("data/awards/default_awards.ron");
 }
 
 /// Load training and job catalogs that are stored as a separate Bevy resource.

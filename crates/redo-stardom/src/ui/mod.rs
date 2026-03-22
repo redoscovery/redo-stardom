@@ -4,6 +4,7 @@ pub mod central_tabs;
 pub mod dashboard;
 pub mod display;
 pub mod events;
+pub mod game_log;
 pub mod hud;
 pub mod main_menu;
 pub mod week_plan;
@@ -24,5 +25,6 @@ impl Plugin for UiPlugin {
         app.add_plugins(central_tabs::CentralTabsPlugin);
         app.add_plugins(events::EventsPlugin);
         app.add_plugins(week_report::WeekReportPlugin);
+        app.add_plugins(game_log::GameLogPlugin);
     }
 }

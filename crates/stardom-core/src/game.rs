@@ -1,9 +1,11 @@
 use crate::artist::Artist;
+use crate::award::AwardDef;
 use crate::calendar::{Calendar, WEEKS_PER_YEAR};
 use crate::company::CompanyState;
 use crate::config::Settings;
-use crate::crisis::CrisisDef;
+use crate::crisis::{self, CrisisDef};
 use crate::gig::{GigCategory, GigDef};
+use crate::gig_pool;
 use crate::job::JobDef;
 use crate::narrative::ScriptDef;
 use crate::office::{self, OfficeUpgradeDef};
@@ -85,6 +87,12 @@ pub struct GameState {
     pub script_catalog: Vec<ScriptDef>,
     #[serde(default)]
     pub gig_catalog: Vec<GigDef>,
+    #[serde(default)]
+    pub crisis_catalog: Vec<CrisisDef>,
+    #[serde(default)]
+    pub award_defs: Vec<AwardDef>,
+    #[serde(default)]
+    pub log: Vec<String>,
 }
 
 impl GameState {
@@ -105,7 +113,14 @@ impl GameState {
             prospects: Vec::new(),
             script_catalog: Vec::new(),
             gig_catalog: Vec::new(),
+            crisis_catalog: Vec::new(),
+            award_defs: Vec::new(),
+            log: Vec::new(),
         }
+    }
+
+    fn log(&mut self, msg: String) {
+        self.log.push(msg);
     }
 
     pub fn process_command(&mut self, command: GameCommand) {
@@ -252,6 +267,11 @@ impl GameState {
         let was_last_week_of_year = self.calendar.week == WEEKS_PER_YEAR;
         self.calendar.advance_week();
 
+        self.log(format!(
+            "--- 第 {} 年 第 {} 週 ---",
+            self.calendar.year, self.calendar.week
+        ));
+
         // Decrement gig lock timers
         for artist in &mut self.artists {
             if artist.locked_weeks > 0 {
@@ -271,6 +291,10 @@ impl GameState {
                     // Track completed gig category
                     self.completed_gig_categories
                         .push((artist.id, gig_def.category));
+                    self.log.push(format!(
+                        "[通告完成] {} 完成「{}」，收入 ${}",
+                        artist.name, gig_def.name, pay
+                    ));
                     false
                 } else {
                     true
@@ -283,6 +307,14 @@ impl GameState {
         for artist in &mut self.artists {
             if was_last_week_of_year {
                 artist.age += 1;
+
+                // Age effect on Pure image tag (spec A.8)
+                if artist.age > 25 {
+                    let decay = ((artist.age - 25) as f64 * 0.3) as i32;
+                    if decay > 0 && artist.image.pure > 0 {
+                        artist.image.pure = (artist.image.pure - decay).max(0);
+                    }
+                }
             }
             let active = artist.current_activity.is_public();
             artist.inactive_weeks = if active { 0 } else { artist.inactive_weeks + 1 };
@@ -300,13 +332,103 @@ impl GameState {
             self.company.spend(upkeep);
         }
 
+        // Gig pool auto-rotation (every odd week = new rotation)
+        if self.calendar.week % 2 == 1 && !self.gig_catalog.is_empty() {
+            let _pool = gig_pool::generate_pool(&self.gig_catalog, self.calendar.is_rotation_a());
+            self.log(format!(
+                "通告輪換：新的通告列表已更新（{}類）",
+                if self.calendar.is_rotation_a() {
+                    "音樂/影視"
+                } else {
+                    "模特/綜藝/代言/創作"
+                }
+            ));
+        }
+
+        // Crisis random trigger (per non-locked artist)
+        if !self.crisis_catalog.is_empty() {
+            use rand::Rng;
+            let mut rng = rand::rng();
+            let crisis_catalog = self.crisis_catalog.clone();
+            for i in 0..self.artists.len() {
+                let artist = &self.artists[i];
+                if artist.is_locked() {
+                    continue;
+                }
+                let tier = artist.stats.recognition_tier();
+                let rebellion = artist.traits.rebellion;
+                let roll: u32 = rng.random_range(0..100);
+                if crisis::roll_crisis_chance(self.settings.crisis_base_chance, rebellion, roll) {
+                    let eligible: Vec<_> = crisis_catalog
+                        .iter()
+                        .filter(|c| c.can_trigger(tier))
+                        .collect();
+                    if !eligible.is_empty() {
+                        let idx = rng.random_range(0..eligible.len());
+                        let crisis = eligible[idx].clone();
+                        let name = self.artists[i].name.clone();
+                        self.log(format!("[危機] {} 遭遇了「{}」！", name, crisis.name));
+                        self.active_crises.push((i, crisis));
+                    }
+                }
+            }
+        }
+
+        // Award ceremony check (by month)
+        let month = self.calendar.approximate_month();
+        let award_defs = self.award_defs.clone();
+        for award in &award_defs {
+            if award.ceremony_month != month {
+                continue;
+            }
+            for i in 0..self.artists.len() {
+                let artist = &self.artists[i];
+                let categories: Vec<_> = self
+                    .completed_gig_categories
+                    .iter()
+                    .filter(|(aid, _)| *aid == artist.id)
+                    .map(|(_, cat)| *cat)
+                    .collect();
+                if !award.is_nominated(&categories) {
+                    continue;
+                }
+                let score = award.calculate_score(&artist.skills, &artist.image);
+                if award.is_winner(score) {
+                    if !self
+                        .awards_won
+                        .iter()
+                        .any(|(aid, awid)| *aid == artist.id && *awid == award.id)
+                    {
+                        self.awards_won.push((artist.id, award.id));
+                        self.artists[i]
+                            .stats
+                            .add_recognition(award.recognition_boost);
+                        self.artists[i].stats.reputation = (self.artists[i].stats.reputation
+                            + award.reputation_boost)
+                            .clamp(-100, 100);
+                        self.log(format!(
+                            "[獎項] {} 獲得了「{}」！(分數：{} > {})",
+                            self.artists[i].name, award.name, score, award.ai_competitor_score
+                        ));
+                    }
+                } else {
+                    self.log(format!(
+                        "[獎項] {} 未能獲得「{}」(分數：{} < {})",
+                        self.artists[i].name, award.name, score, award.ai_competitor_score
+                    ));
+                }
+            }
+        }
+
         // Bankruptcy — pending gigs count as pending income
         let has_pending_income = !self.pending_gigs.is_empty();
         self.company.update_bankruptcy_counter(has_pending_income);
 
         if self.company.is_bankrupt() {
+            self.log("遊戲結束：公司破產！".to_string());
             self.phase = GamePhase::GameOver;
         } else if self.phase == GamePhase::MainGame && self.calendar.is_goal_period_over() {
+            self.log("目標期間結束，進入後期階段。".to_string());
             self.phase = GamePhase::PostEnding;
         }
     }
@@ -317,6 +439,7 @@ mod tests {
     use super::*;
     use crate::attribute::BaseAttributes;
     use crate::attribute::InnerTraits;
+    use crate::award::AwardDef;
     use crate::company::OfficeTier;
     use crate::config::Settings;
     use crate::crisis::{CrisisChoice, CrisisDef};
@@ -328,7 +451,7 @@ mod tests {
     use crate::recruitment::ArtistProspect;
     use crate::stats::RecognitionTier;
     use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
-    use crate::types::{ArtistId, CrisisId, GigId, JobId, TrainingId};
+    use crate::types::{ArtistId, AwardId, CrisisId, GigId, JobId, TrainingId};
 
     fn default_game() -> GameState {
         GameState::new(Settings::default())
@@ -741,5 +864,99 @@ mod tests {
         });
         assert_eq!(game.artists.len(), 3);
         assert_eq!(game.prospects.len(), 1);
+    }
+
+    #[test]
+    fn crisis_triggers_randomly() {
+        let settings = Settings {
+            crisis_base_chance: 100, // guaranteed trigger
+            ..Settings::default()
+        };
+        let mut game = GameState::new(settings);
+        game.artists.push(make_artist_with_popularity(0));
+        game.crisis_catalog.push(CrisisDef {
+            id: CrisisId(1),
+            name: "Test Crisis".to_string(),
+            description: "A test crisis.".to_string(),
+            trigger_weight: 10,
+            min_recognition_tier: RecognitionTier::Unknown,
+            choices: vec![CrisisChoice {
+                label: "Ok".to_string(),
+                reputation_change: 0,
+                popularity_change: 0,
+                stress_change: 0,
+                image_tag_changes: vec![],
+            }],
+        });
+        game.process_command(GameCommand::AdvanceWeek);
+        assert!(
+            !game.active_crises.is_empty(),
+            "Crisis should have triggered with 100% chance"
+        );
+        assert_eq!(game.active_crises[0].1.name, "Test Crisis");
+    }
+
+    #[test]
+    fn award_ceremony_triggers() {
+        let mut game = default_game();
+        let mut artist = make_artist_with_popularity(50);
+        artist.skills.poise = 5000;
+        artist.image.sexy = 80;
+        artist.image.cool = 60;
+        game.artists.push(artist);
+
+        // Award at month 1 (ceremony_month=1), no gig category required, low AI score
+        game.award_defs.push(AwardDef {
+            id: AwardId(1),
+            name: "Test Award".to_string(),
+            ceremony_month: 1,
+            nomination_month: 1,
+            scoring_skills: vec![(SkillTarget::Poise, 1.0)],
+            scoring_image_tags: vec![(ImageTag::Sexy, 0.5), (ImageTag::Cool, 0.3)],
+            requires_gig_category: None,
+            ai_competitor_score: 100,
+            recognition_boost: 500,
+            reputation_boost: 5,
+        });
+
+        // Week 1 is month 1 — advance one week to trigger ceremony check
+        game.process_command(GameCommand::AdvanceWeek);
+
+        assert_eq!(game.awards_won.len(), 1);
+        assert_eq!(game.awards_won[0], (ArtistId(1), AwardId(1)));
+        // Recognition should have increased by 500
+        assert!(game.artists[0].stats.recognition >= 500);
+    }
+
+    #[test]
+    fn age_decays_pure_image() {
+        let mut game = default_game();
+        let mut artist = make_artist_with_popularity(0);
+        artist.age = 29; // Will become 30 on year rollover
+        artist.image.pure = 50;
+        game.artists.push(artist);
+
+        // Advance to end of year (week 52 → triggers aging)
+        for _ in 0..52 {
+            game.process_command(GameCommand::AdvanceWeek);
+        }
+
+        // After aging to 30: decay = (30 - 25) * 0.3 = 1.5 → 1 as i32
+        assert_eq!(game.artists[0].age, 30);
+        assert!(
+            game.artists[0].image.pure < 50,
+            "Pure should have decayed from 50, got {}",
+            game.artists[0].image.pure
+        );
+    }
+
+    #[test]
+    fn game_log_records_week_headers() {
+        let mut game = default_game();
+        game.process_command(GameCommand::AdvanceWeek);
+        assert!(
+            game.log.iter().any(|l| l.contains("第 1 年 第 2 週")),
+            "Log should contain week header"
+        );
     }
 }

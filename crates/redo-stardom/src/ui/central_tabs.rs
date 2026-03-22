@@ -349,13 +349,13 @@ fn tab_shop(ui: &mut egui::Ui, game: &mut GameWorld, selected: &SelectedArtist) 
                 let owned = owned_outfits.contains(&outfit.id);
                 if owned {
                     ui.label("已擁有");
-                    if let Some(idx) = selected.0 {
-                        if ui.button("穿戴").clicked() {
-                            pending_cmd = Some(GameCommand::EquipOutfit {
-                                artist_index: idx,
-                                outfit_id: outfit.id,
-                            });
-                        }
+                    if let Some(idx) = selected.0
+                        && ui.button("穿戴").clicked()
+                    {
+                        pending_cmd = Some(GameCommand::EquipOutfit {
+                            artist_index: idx,
+                            outfit_id: outfit.id,
+                        });
                     }
                 } else if ui.button("購買").clicked() {
                     pending_cmd = Some(GameCommand::PurchaseOutfit {
