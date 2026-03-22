@@ -15,6 +15,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "REDÓ Stardom".to_string(),
                 resolution: WindowResolution::new(1024, 768),
+                resizable: false,
                 ..default()
             }),
             ..default()

@@ -78,142 +78,96 @@ fn artist_panel_ui(
         }
         ui.separator();
 
-        // Two-column layout
         egui::ScrollArea::vertical().show(ui, |ui| {
-            ui.columns(2, |cols| {
-                // Left column: attributes and stats
-                cols[0].heading("基礎屬性");
-                cols[0].label(format!("體能：{}", artist.base_attributes.stamina));
-                cols[0].label(format!("智識：{}", artist.base_attributes.intellect));
-                cols[0].label(format!("共情：{}", artist.base_attributes.empathy));
-                cols[0].label(format!("魅力：{}", artist.base_attributes.charm));
-                cols[0].add_space(8.0);
-
-                cols[0].heading("專業技能");
-                let skills = &artist.skills;
-                for (name, val) in [
-                    ("歌藝", skills.vocal),
-                    ("演技", skills.acting),
-                    ("舞藝", skills.dance),
-                    ("儀態", skills.poise),
-                    ("口才", skills.eloquence),
-                    ("創作", skills.creativity),
-                ] {
-                    cols[0].horizontal(|ui| {
-                        ui.label(format!("{name:>4}：{val:>5}"));
-                        ui.add(egui::ProgressBar::new(val as f32 / 10000.0).desired_width(120.0));
-                    });
-                }
-                cols[0].add_space(8.0);
-
-                cols[0].heading("內在特質");
-                cols[0].label(format!("自信：{}", artist.traits.confidence));
-                cols[0].label(format!("叛逆：{}", artist.traits.rebellion));
-                cols[0].add_space(8.0);
-
-                cols[0].heading("性格光譜");
-                cols[0].label(format!(
-                    "社交：{} ({})",
-                    artist.personality.social,
-                    if artist.personality.social < 0 {
-                        "內斂"
-                    } else {
-                        "外放"
-                    }
-                ));
-                cols[0].label(format!(
-                    "思維：{} ({})",
-                    artist.personality.thinking,
-                    if artist.personality.thinking < 0 {
-                        "直覺"
-                    } else {
-                        "邏輯"
-                    }
-                ));
-                cols[0].label(format!(
-                    "行事：{} ({})",
-                    artist.personality.action,
-                    if artist.personality.action < 0 {
-                        "謹慎"
-                    } else {
-                        "冒險"
-                    }
-                ));
-                cols[0].label(format!(
-                    "處世：{} ({})",
-                    artist.personality.stance,
-                    if artist.personality.stance < 0 {
-                        "隨和"
-                    } else {
-                        "好勝"
-                    }
-                ));
-
-                // Right column: image tags, aux stats, activity assignment
-                cols[1].heading("形象標籤");
-                let img = &artist.image;
-                for (name, val) in [
-                    ("清純", img.pure),
-                    ("性感", img.sexy),
-                    ("酷帥", img.cool),
-                    ("知性", img.intellectual),
-                    ("搞笑", img.funny),
-                    ("神秘", img.mysterious),
-                ] {
-                    cols[1].label(format!("{name}：{val}"));
-                }
-                cols[1].add_space(8.0);
-
-                cols[1].heading("市場狀態");
-                cols[1].label(format!(
-                    "知名度：{} ({})",
-                    artist.stats.recognition,
-                    recognition_tier_text(artist.stats.recognition_tier())
-                ));
-                cols[1].label(format!("風評：{}", artist.stats.reputation));
-                cols[1].label(format!("人氣：{}", artist.stats.popularity));
-                cols[1].label(format!("壓力：{}", artist.stats.stress));
-                cols[1].add_space(16.0);
-
-                // Activity assignment
-                cols[1].heading("安排活動");
-                if artist.is_locked() {
-                    cols[1].label(format!(
-                        "[鎖定] 通告中（剩餘 {} 週）",
-                        artist.locked_weeks
-                    ));
-                } else if let Some(label) = &current_plan_label {
-                    // Already have a planned activity — show it with cancel option
-                    cols[1].label(format!("[已安排] {}", label));
-                    if cols[1].button("取消").clicked() {
+            // Activity assignment — always visible at top
+            ui.heading("安排活動");
+            if artist.is_locked() {
+                ui.label(format!("[鎖定] 通告中（剩餘 {} 週）", artist.locked_weeks));
+            } else if let Some(label) = &current_plan_label {
+                ui.horizontal(|ui| {
+                    ui.label(format!("[已安排] {}", label));
+                    if ui.button("取消").clicked() {
                         cancel_plan = true;
                     }
-                } else {
-                    // No plan yet — show activity buttons
-                    // Training options from catalogs
+                });
+            } else {
+                ui.horizontal_wrapped(|ui| {
                     for training in &training_defs {
                         let cost = training.tiers.first().map(|t| t.cost).unwrap_or(0);
-                        let label = format!("{} (${cost})", training.name);
-                        if cols[1].button(&label).clicked() {
+                        if ui.button(format!("{} (${})", training.name, cost)).clicked() {
                             new_plan = Some(PlannedActivity::Training(training.clone()));
                         }
                     }
-
-                    cols[1].add_space(4.0);
-
-                    // Job options from catalogs
                     for job in &job_defs {
-                        let label = format!("{} (+${})", job.name, job.pay);
-                        if cols[1].button(&label).clicked() {
+                        if ui.button(format!("{} (+${})", job.name, job.pay)).clicked() {
                             new_plan = Some(PlannedActivity::Job(job.clone()));
                         }
                     }
-
-                    cols[1].add_space(4.0);
-                    if cols[1].button("休息").clicked() {
+                    if ui.button("休息").clicked() {
                         new_plan = Some(PlannedActivity::Rest);
                     }
+                });
+            }
+            ui.separator();
+
+            // Stats in collapsible sections
+            egui::CollapsingHeader::new("基礎屬性").default_open(true).show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(format!("體能：{}",  artist.base_attributes.stamina));
+                    ui.label(format!("智識：{}",  artist.base_attributes.intellect));
+                    ui.label(format!("共情：{}",  artist.base_attributes.empathy));
+                    ui.label(format!("魅力：{}",  artist.base_attributes.charm));
+                });
+            });
+
+            egui::CollapsingHeader::new("專業技能").default_open(true).show(ui, |ui| {
+                let skills = &artist.skills;
+                for (name, val) in [
+                    ("歌藝", skills.vocal), ("演技", skills.acting),
+                    ("舞藝", skills.dance), ("儀態", skills.poise),
+                    ("口才", skills.eloquence), ("創作", skills.creativity),
+                ] {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("{name}：{val:>5}"));
+                        ui.add(egui::ProgressBar::new(val as f32 / 10000.0).desired_width(100.0));
+                    });
                 }
+            });
+
+            egui::CollapsingHeader::new("內在特質").default_open(false).show(ui, |ui| {
+                ui.label(format!("自信：{}", artist.traits.confidence));
+                ui.label(format!("叛逆：{}", artist.traits.rebellion));
+            });
+
+            egui::CollapsingHeader::new("性格光譜").default_open(false).show(ui, |ui| {
+                ui.label(format!("社交：{} ({})", artist.personality.social,
+                    if artist.personality.social < 0 { "內斂" } else { "外放" }));
+                ui.label(format!("思維：{} ({})", artist.personality.thinking,
+                    if artist.personality.thinking < 0 { "直覺" } else { "邏輯" }));
+                ui.label(format!("行事：{} ({})", artist.personality.action,
+                    if artist.personality.action < 0 { "謹慎" } else { "冒險" }));
+                ui.label(format!("處世：{} ({})", artist.personality.stance,
+                    if artist.personality.stance < 0 { "隨和" } else { "好勝" }));
+            });
+
+            egui::CollapsingHeader::new("形象標籤").default_open(false).show(ui, |ui| {
+                let img = &artist.image;
+                ui.horizontal_wrapped(|ui| {
+                    for (name, val) in [
+                        ("清純", img.pure), ("性感", img.sexy), ("酷帥", img.cool),
+                        ("知性", img.intellectual), ("搞笑", img.funny), ("神秘", img.mysterious),
+                    ] {
+                        ui.label(format!("{name}：{val}"));
+                    }
+                });
+            });
+
+            egui::CollapsingHeader::new("市場狀態").default_open(true).show(ui, |ui| {
+                ui.label(format!("知名度：{} ({})", artist.stats.recognition,
+                    recognition_tier_text(artist.stats.recognition_tier())));
+                ui.label(format!("風評：{}", artist.stats.reputation));
+                ui.label(format!("人氣：{}", artist.stats.popularity));
+                ui.label(format!("壓力：{}", artist.stats.stress));
             });
         });
     });
