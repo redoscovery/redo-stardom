@@ -1,0 +1,29 @@
+ArtistDefinition(
+    id: ArtistId(1),
+    name: "Luna Star",
+    starting_age: 18,
+    base_attributes: BaseAttributes(
+        stamina: 60,
+        intellect: 55,
+        empathy: 70,
+        charm: 80,
+    ),
+    personality: PersonalitySpectrums(
+        social: 30,
+        thinking: -20,
+        action: 10,
+        stance: -40,
+    ),
+    traits: InnerTraits(
+        confidence: 55,
+        rebellion: 25,
+    ),
+    image: ImageTags(
+        pure: 60,
+        sexy: 20,
+        cool: 40,
+        intellectual: 30,
+        funny: 10,
+        mysterious: 50,
+    ),
+)

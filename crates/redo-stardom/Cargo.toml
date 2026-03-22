@@ -1,0 +1,8 @@
+[package]
+name = "redo-stardom"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+stardom-core = { path = "../stardom-core" }
+bevy = "0.18"
