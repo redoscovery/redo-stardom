@@ -69,7 +69,7 @@ fn artist_panel_ui(
             activity_text(&artist.current_activity)
         ));
         if artist.is_locked() {
-            ui.label(format!("🔒 通告進行中，剩餘 {} 週", artist.locked_weeks));
+            ui.label(format!("[鎖定] 通告進行中，剩餘 {} 週", artist.locked_weeks));
         }
         ui.separator();
 
@@ -172,9 +172,11 @@ fn artist_panel_ui(
 
                 // Activity assignment
                 cols[1].heading("安排活動");
-                let is_busy = artist.is_locked() || artist.current_activity != Activity::Idle;
-                if is_busy {
-                    cols[1].label("本週藝人已有安排。");
+                if artist.is_locked() {
+                    cols[1].label(format!("[鎖定] 通告中（剩餘 {} 週）", artist.locked_weeks));
+                } else if artist.current_activity != Activity::Idle {
+                    cols[1].label(format!("[已安排] {}", activity_text(&artist.current_activity)));
+                    cols[1].label("按「推進一週」執行。");
                 } else {
                     // Training options from catalogs
                     for training in &training_defs {

@@ -51,7 +51,7 @@ fn events_ui(mut contexts: EguiContexts, mut game: ResMut<GameWorld>) {
 
     let mut pending_response: Option<(usize, usize)> = None;
 
-    egui::Window::new("⚠️ 公關危機")
+    egui::Window::new("[緊急] 公關危機")
         .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
         .collapsible(false)
         .resizable(false)

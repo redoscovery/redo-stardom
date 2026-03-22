@@ -105,7 +105,7 @@ fn gig_market_ui(
                                     (prospect.base_commission * 100.0) as i32
                                 ));
                                 if prospect.is_locked(total_weeks) {
-                                    ui.label("🔒 暫時無法接觸");
+                                    ui.label("[鎖定] 暫時無法接觸");
                                 } else if artist_count < max_artists {
                                     if ui.button("簽約").clicked() {
                                         pending_cmd = Some(GameCommand::SignArtist {
