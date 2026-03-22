@@ -74,6 +74,40 @@ impl ProfessionalSkills {
             self, SKILL_MIN, SKILL_MAX, vocal, acting, dance, poise, eloquence, creativity
         );
     }
+
+    pub fn get(&self, target: crate::training::SkillTarget) -> i32 {
+        use crate::training::SkillTarget;
+        match target {
+            SkillTarget::Vocal => self.vocal,
+            SkillTarget::Acting => self.acting,
+            SkillTarget::Dance => self.dance,
+            SkillTarget::Poise => self.poise,
+            SkillTarget::Eloquence => self.eloquence,
+            SkillTarget::Creativity => self.creativity,
+        }
+    }
+
+    pub fn get_mut(&mut self, target: crate::training::SkillTarget) -> &mut i32 {
+        use crate::training::SkillTarget;
+        match target {
+            SkillTarget::Vocal => &mut self.vocal,
+            SkillTarget::Acting => &mut self.acting,
+            SkillTarget::Dance => &mut self.dance,
+            SkillTarget::Poise => &mut self.poise,
+            SkillTarget::Eloquence => &mut self.eloquence,
+            SkillTarget::Creativity => &mut self.creativity,
+        }
+    }
+
+    pub fn apply_gain(&mut self, target: crate::training::SkillTarget, amount: i32) {
+        let field = self.get_mut(target);
+        *field = (*field + amount).min(SKILL_MAX);
+    }
+
+    pub fn apply_loss(&mut self, target: crate::training::SkillTarget, amount: i32) {
+        let field = self.get_mut(target);
+        *field = (*field - amount).max(SKILL_MIN);
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

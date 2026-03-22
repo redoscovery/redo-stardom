@@ -52,6 +52,29 @@ impl PersonalitySpectrums {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ImageTag {
+    Pure,
+    Sexy,
+    Cool,
+    Intellectual,
+    Funny,
+    Mysterious,
+}
+
+impl ImageTag {
+    pub fn value_from(&self, tags: &ImageTags) -> i32 {
+        match self {
+            Self::Pure => tags.pure,
+            Self::Sexy => tags.sexy,
+            Self::Cool => tags.cool,
+            Self::Intellectual => tags.intellectual,
+            Self::Funny => tags.funny,
+            Self::Mysterious => tags.mysterious,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct ImageTags {
     pub pure: i32,         // 清純

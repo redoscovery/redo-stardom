@@ -70,7 +70,8 @@ impl GameState {
                 training,
             } => {
                 if let Some(artist) = self.artists.get_mut(artist_index)
-                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                    && !artist.is_locked()
+                    && artist.current_activity == Activity::Idle
                 {
                     let cost = scheduling::apply_training(artist, &training);
                     self.company.spend(Money(cost));
@@ -78,7 +79,8 @@ impl GameState {
             }
             GameCommand::AssignJob { artist_index, job } => {
                 if let Some(artist) = self.artists.get_mut(artist_index)
-                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                    && !artist.is_locked()
+                    && artist.current_activity == Activity::Idle
                 {
                     let pay = scheduling::apply_job(artist, &job);
                     self.company.earn(Money(pay));
@@ -86,7 +88,8 @@ impl GameState {
             }
             GameCommand::AssignGig { artist_index, gig } => {
                 if let Some(artist) = self.artists.get_mut(artist_index)
-                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                    && !artist.is_locked()
+                    && artist.current_activity == Activity::Idle
                 {
                     scheduling::start_gig(artist, &gig);
                     self.pending_gigs.push((artist_index, gig));
@@ -94,7 +97,8 @@ impl GameState {
             }
             GameCommand::AssignRest { artist_index } => {
                 if let Some(artist) = self.artists.get_mut(artist_index)
-                    && !artist.is_locked() && artist.current_activity == Activity::Idle
+                    && !artist.is_locked()
+                    && artist.current_activity == Activity::Idle
                 {
                     scheduling::apply_rest(artist);
                 }
@@ -106,33 +110,28 @@ impl GameState {
         let was_last_week_of_year = self.calendar.week == WEEKS_PER_YEAR;
         self.calendar.advance_week();
 
-        // Decrement gig lock timers, collect completed artist IDs
-        let mut completed_gigs = Vec::new();
+        // Decrement gig lock timers
         for artist in &mut self.artists {
             if artist.locked_weeks > 0 {
                 artist.locked_weeks -= 1;
-                if artist.locked_weeks == 0 {
-                    completed_gigs.push(artist.id);
-                }
             }
         }
 
-        // Complete gigs — use mem::take to avoid borrow conflict
-        let mut pending = std::mem::take(&mut self.pending_gigs);
-        let mut remaining = Vec::new();
-        for (idx, gig_def) in pending.drain(..) {
-            let is_complete = self
-                .artists
-                .get(idx)
-                .is_some_and(|a| completed_gigs.contains(&a.id));
-            if is_complete {
-                let pay = scheduling::complete_gig(&mut self.artists[idx], &gig_def);
-                self.company.earn(Money(pay));
-            } else {
-                remaining.push((idx, gig_def));
-            }
+        // Complete finished gigs (locked_weeks reached 0)
+        if !self.pending_gigs.is_empty() {
+            let mut pending = std::mem::take(&mut self.pending_gigs);
+            pending.retain(|(idx, gig_def)| {
+                let is_complete = self.artists.get(*idx).is_some_and(|a| a.locked_weeks == 0);
+                if is_complete {
+                    let pay = scheduling::complete_gig(&mut self.artists[*idx], gig_def);
+                    self.company.earn(Money(pay));
+                    false
+                } else {
+                    true
+                }
+            });
+            self.pending_gigs = pending;
         }
-        self.pending_gigs = remaining;
 
         // Aging, popularity decay, activity reset
         for artist in &mut self.artists {

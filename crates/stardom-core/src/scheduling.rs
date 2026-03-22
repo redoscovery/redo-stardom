@@ -1,33 +1,28 @@
 use crate::artist::Artist;
-use crate::attribute::ProfessionalSkills;
 use crate::gig::GigDef;
 use crate::job::JobDef;
-use crate::training::{SkillTarget, TrainingDef};
+use crate::training::TrainingDef;
 use crate::types::Activity;
 
 const REST_STRESS_REDUCTION: i32 = 20;
 
-/// Apply a training session to the artist.
-/// Returns the cost charged.
 pub fn apply_training(artist: &mut Artist, training: &TrainingDef) -> i64 {
-    let current_skill = get_skill_value(&artist.skills, training.skill);
+    let current_skill = artist.skills.get(training.skill);
     let tier_idx = training.best_tier_index(current_skill);
     let effect = training.calculate_effect(tier_idx, &artist.base_attributes, artist.stats.stress);
-    apply_skill_gain(&mut artist.skills, training.skill, effect.skill_gain);
+    artist.skills.apply_gain(training.skill, effect.skill_gain);
     artist.stats.stress = (artist.stats.stress + effect.stress_increase).min(100);
     artist.current_activity = Activity::Training;
     effect.cost
 }
 
-/// Apply a part-time job to the artist.
-/// Returns the pay earned.
 pub fn apply_job(artist: &mut Artist, job: &JobDef) -> i64 {
     let effect = job.calculate_effect();
     for (target, gain) in &effect.skill_gains {
-        apply_skill_gain(&mut artist.skills, *target, *gain);
+        artist.skills.apply_gain(*target, *gain);
     }
     for (target, loss) in &effect.skill_losses {
-        apply_skill_loss(&mut artist.skills, *target, *loss);
+        artist.skills.apply_loss(*target, *loss);
     }
     artist.stats.add_recognition(effect.recognition_gain);
     artist.stats.stress = (artist.stats.stress + effect.stress_change).clamp(0, 100);
@@ -35,63 +30,24 @@ pub fn apply_job(artist: &mut Artist, job: &JobDef) -> i64 {
     effect.pay
 }
 
-/// Apply a rest week to the artist.
 pub fn apply_rest(artist: &mut Artist) {
     artist.stats.stress = (artist.stats.stress - REST_STRESS_REDUCTION).max(0);
     artist.current_activity = Activity::Rest;
 }
 
-/// Lock the artist into a gig for its duration.
 pub fn start_gig(artist: &mut Artist, gig: &GigDef) {
     artist.locked_weeks = gig.duration_weeks;
     artist.current_activity = Activity::Gig;
 }
 
-/// Finalize a completed gig and apply all rewards.
-/// Returns the pay earned.
 pub fn complete_gig(artist: &mut Artist, gig: &GigDef) -> i64 {
     for (target, gain) in &gig.skill_gains {
-        apply_skill_gain(&mut artist.skills, *target, *gain);
+        artist.skills.apply_gain(*target, *gain);
     }
     artist.stats.add_recognition(gig.recognition_reward);
     artist.stats.reputation = (artist.stats.reputation + gig.reputation_reward).clamp(-100, 100);
     artist.stats.stress = (artist.stats.stress + gig.stress_cost).min(100);
     gig.calculate_pay(artist.stats.popularity)
-}
-
-fn get_skill_value(skills: &ProfessionalSkills, target: SkillTarget) -> i32 {
-    match target {
-        SkillTarget::Vocal => skills.vocal,
-        SkillTarget::Acting => skills.acting,
-        SkillTarget::Dance => skills.dance,
-        SkillTarget::Poise => skills.poise,
-        SkillTarget::Eloquence => skills.eloquence,
-        SkillTarget::Creativity => skills.creativity,
-    }
-}
-
-fn apply_skill_gain(skills: &mut ProfessionalSkills, target: SkillTarget, amount: i32) {
-    let field = match target {
-        SkillTarget::Vocal => &mut skills.vocal,
-        SkillTarget::Acting => &mut skills.acting,
-        SkillTarget::Dance => &mut skills.dance,
-        SkillTarget::Poise => &mut skills.poise,
-        SkillTarget::Eloquence => &mut skills.eloquence,
-        SkillTarget::Creativity => &mut skills.creativity,
-    };
-    *field = (*field + amount).min(10_000);
-}
-
-fn apply_skill_loss(skills: &mut ProfessionalSkills, target: SkillTarget, amount: i32) {
-    let field = match target {
-        SkillTarget::Vocal => &mut skills.vocal,
-        SkillTarget::Acting => &mut skills.acting,
-        SkillTarget::Dance => &mut skills.dance,
-        SkillTarget::Poise => &mut skills.poise,
-        SkillTarget::Eloquence => &mut skills.eloquence,
-        SkillTarget::Creativity => &mut skills.creativity,
-    };
-    *field = (*field - amount).max(0);
 }
 
 #[cfg(test)]
