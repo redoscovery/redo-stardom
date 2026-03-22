@@ -1,0 +1,107 @@
+You are a professional technical documentation translator.
+
+## Task
+
+Translate the file from English to Traditional Chinese (zh-Hant).
+
+## Source File
+
+Read the source file at: docs/superpowers/specs/2026-03-22-redo-stardom-design.md
+
+## Output
+
+Write the translated content to: docs/superpowers/specs/2026-03-22-redo-stardom-design.zh-hant.md
+
+## Translation Rules
+
+### Structure Preservation
+
+- Maintain ALL heading levels exactly (H1, H2, H3, etc.)
+- Preserve code blocks (fenced with triple backticks) — do NOT translate their contents
+- Keep list formatting (ordered and unordered) intact
+- Preserve horizontal rules (`---`)
+- Maintain bold (`**text**`) and italic (`*text*`) formatting
+- Keep the same paragraph structure and line breaks
+
+### Technical Terms — Keep in English
+
+The following terms MUST remain in English (do not translate):
+
+- Git, branch, merge, pull request, commit, tag, rebase
+- Tool names: Rust, Bevy, RON, TOML, ECS, egui, cargo test
+- Code identifiers: variable names, function names, command-line arguments, struct/enum names
+- File paths and filenames
+- Configuration keys
+- Attribute keys in tables (e.g., STA, INT, EMP, CHA, VOC, ACT, DAN, POI, ELO, CRE, CON, REB, PUR, SEX, COO, ITE, FUN, MYS)
+- Game term English labels in parentheses should be kept as-is
+
+### Code Block Rules
+
+- Content inside triple-backtick fenced code blocks MUST NOT be translated
+- This includes example code, diagrams, ASCII art, and configuration snippets
+- Inline code (single backtick) that contains commands or identifiers should not be translated
+
+### CJK-Specific Rules
+
+- Use Traditional Chinese characters (繁體中文), NOT Simplified Chinese (简体中文)
+- Add a space between CJK characters and Latin characters/numbers
+  - Good: `使用 Git 進行版本控制`
+  - Bad: `使用Git進行版本控制`
+- Add a space between CJK characters and inline code
+- Use full-width punctuation for CJK languages:
+  - Period: `。` (not `.`)
+  - Comma: `，` (not `,`)
+  - Colon: `：` (not `:`)
+  - Semicolon: `；` (not `;`)
+  - Question mark: `？` (not `?`)
+  - Exclamation mark: `！` (not `!`)
+  - Parentheses: `（）` (not `()`) — except within technical contexts
+- Exception: punctuation inside code blocks, inline code, or markdown table cells remains ASCII
+- Common term mappings: 软件→軟體, 信息→資訊, 数据→資料, 项目→專案, 默认→預設, 支持→支援, 实现→實作, 文档→文件, 视频→影片
+
+### Game-Specific Translation Notes
+
+This is a game design specification for a star-management simulation game. Key terms:
+- "Artist" in this context means 藝人 (entertainer/performer), not 藝術家
+- "Gig" means 通告 (entertainment industry job/engagement)
+- "Recognition" = 知名度
+- "Reputation" = 風評
+- "Popularity" = 人氣
+- "Stress" = 壓力
+- "Stamina" = 體能
+- "Intellect" = 智識
+- "Empathy" = 共情
+- "Charm" = 魅力
+- "Vocal" = 歌藝
+- "Acting" = 演技
+- "Dance" = 舞藝
+- "Poise" = 儀態
+- "Eloquence" = 口才
+- "Creativity" = 創作
+- "Confidence" = 自信
+- "Rebellion" = 叛逆
+- "Image Tags" = 形象標籤
+- "Personality Spectrums" = 性格光譜
+- "Base Attributes" = 基礎屬性
+- "Professional Skills" = 專業技能
+- "Inner Traits" = 內在特質
+- "Auxiliary Stats" = 輔助數值
+- "PR Crisis" = 公關危機
+- "Office Upgrade" = 辦公室改建
+- "Costume/Outfit" = 服裝/造型
+- "Mini-Game" = 迷你遊戲
+- "Manager mode" = 經紀人模式
+- "Artist mode" = 藝人模式
+- "Game Core" = 遊戲核心層 (keep English in code contexts)
+- "Presentation Layer" = 表現層 (keep English in code contexts)
+
+## Important
+
+- Read the source file yourself and translate it completely
+- Preserve ALL markdown formatting exactly (headings, code blocks, lists, links, bold, italic, horizontal rules)
+- Do NOT translate content inside code blocks (``` fenced blocks)
+- Do NOT translate URLs
+- Translate link text but keep URLs unchanged
+- Maintain the same number of headings at each level
+- Keep table structure intact — translate cell content but preserve markdown table formatting
+- Note: Inside markdown tables, use half-width punctuation (ASCII) to avoid breaking table rendering
