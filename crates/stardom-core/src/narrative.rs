@@ -41,7 +41,7 @@ pub struct DialogueNode {
     pub speaker: String,
     pub text: String,
     pub choices: Vec<DialogueChoice>,
-    pub next: Option<u32>, // auto-advance if no choices
+    pub next: Option<u32>,         // auto-advance if no choices
     pub condition: Option<String>, // placeholder for future conditions
 }
 

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::persona::{ImageTag, ImageTags, IMAGE_TAG_MAX, IMAGE_TAG_MIN};
+use crate::persona::{IMAGE_TAG_MAX, IMAGE_TAG_MIN, ImageTag, ImageTags};
 use crate::types::{Money, OutfitId};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -62,10 +62,7 @@ mod tests {
             intellectual: 20,
             ..Default::default()
         };
-        let outfit = make_outfit(vec![
-            (ImageTag::Pure, 15),
-            (ImageTag::Intellectual, 10),
-        ]);
+        let outfit = make_outfit(vec![(ImageTag::Pure, 15), (ImageTag::Intellectual, 10)]);
         let result = outfit.apply_to_image(&base);
         assert_eq!(result.pure, 55);
         assert_eq!(result.intellectual, 30);
@@ -96,7 +93,13 @@ mod tests {
         assert_eq!(deserialized.id, outfit.id);
         assert_eq!(deserialized.name, outfit.name);
         assert_eq!(deserialized.cost, outfit.cost);
-        assert_eq!(deserialized.image_modifiers.len(), outfit.image_modifiers.len());
-        assert_eq!(deserialized.trait_modifiers.len(), outfit.trait_modifiers.len());
+        assert_eq!(
+            deserialized.image_modifiers.len(),
+            outfit.image_modifiers.len()
+        );
+        assert_eq!(
+            deserialized.trait_modifiers.len(),
+            outfit.trait_modifiers.len()
+        );
     }
 }

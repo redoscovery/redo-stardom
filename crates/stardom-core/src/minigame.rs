@@ -37,8 +37,7 @@ pub struct MiniGameResult {
 
 /// Spec 5.4: score = skill * 0.7 + random(0, skill * 0.3). roll is 0.0..1.0.
 pub fn auto_resolve(skill: i32, threshold: i32, roll: f64) -> MiniGameResult {
-    let score =
-        (skill as f64 * 0.7 + skill as f64 * 0.3 * roll.clamp(0.0, 1.0)) as i32;
+    let score = (skill as f64 * 0.7 + skill as f64 * 0.3 * roll.clamp(0.0, 1.0)) as i32;
     let passed = score >= threshold;
     let rating = if !passed {
         MiniGameRating::Failed
