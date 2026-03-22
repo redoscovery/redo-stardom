@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
-
-use crate::states::AppState;
+use bevy_egui::{EguiContexts, egui};
 
 #[derive(Clone, Debug)]
 pub struct ReportEntry {
@@ -18,18 +16,12 @@ pub struct WeekReport {
     pub total_expenses: i64,
 }
 
-pub struct WeekReportPlugin;
-
-impl Plugin for WeekReportPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            EguiPrimaryContextPass,
-            week_report_ui.run_if(in_state(AppState::InGame).and(resource_exists::<WeekReport>)),
-        );
-    }
-}
-
-fn week_report_ui(mut contexts: EguiContexts, report: Res<WeekReport>, mut commands: Commands) {
+pub fn week_report_ui(
+    mut contexts: EguiContexts,
+    report: Option<Res<WeekReport>>,
+    mut commands: Commands,
+) {
+    let Some(report) = report else { return; };
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

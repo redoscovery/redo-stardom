@@ -1,21 +1,9 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, egui};
 
 use crate::game_bridge::GameWorld;
-use crate::states::AppState;
 
-pub struct GameLogPlugin;
-
-impl Plugin for GameLogPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            EguiPrimaryContextPass,
-            game_log_ui.run_if(in_state(AppState::InGame)),
-        );
-    }
-}
-
-fn game_log_ui(mut contexts: EguiContexts, game: Res<GameWorld>) {
+pub fn game_log_ui(mut contexts: EguiContexts, game: Res<GameWorld>) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

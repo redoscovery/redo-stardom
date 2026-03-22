@@ -1,22 +1,10 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, egui};
 use stardom_core::game::GameCommand;
 
 use crate::game_bridge::GameWorld;
-use crate::states::AppState;
 
-pub struct EventsPlugin;
-
-impl Plugin for EventsPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            EguiPrimaryContextPass,
-            events_ui.run_if(in_state(AppState::InGame)),
-        );
-    }
-}
-
-fn events_ui(mut contexts: EguiContexts, mut game: ResMut<GameWorld>) {
+pub fn events_ui(mut contexts: EguiContexts, mut game: ResMut<GameWorld>) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

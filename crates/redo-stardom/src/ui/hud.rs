@@ -1,31 +1,24 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, egui};
 use stardom_core::game::GameCommand;
 
 use crate::game_bridge::GameWorld;
-use crate::states::AppState;
 
 use super::display::{office_tier_text, phase_text};
 use super::week_plan::{PlannedActivity, WeekPlan};
 use super::week_report::{ReportEntry, WeekReport};
 
-pub struct HudPlugin;
-
-impl Plugin for HudPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            EguiPrimaryContextPass,
-            hud_ui.run_if(in_state(AppState::InGame).and(not(resource_exists::<WeekReport>))),
-        );
-    }
-}
-
-fn hud_ui(
+pub fn hud_ui(
     mut contexts: EguiContexts,
     mut game: ResMut<GameWorld>,
     mut week_plan: ResMut<WeekPlan>,
     mut commands: Commands,
+    report: Option<Res<WeekReport>>,
 ) {
+    // Skip when WeekReport modal is active
+    if report.is_some() {
+        return;
+    }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

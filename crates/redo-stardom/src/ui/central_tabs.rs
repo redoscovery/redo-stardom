@@ -1,12 +1,11 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, egui};
 use stardom_core::company::OfficeTier;
 use stardom_core::game::GameCommand;
 use stardom_core::office;
 
 use crate::data_loading::GameCatalogs;
 use crate::game_bridge::GameWorld;
-use crate::states::AppState;
 
 use super::SelectedArtist;
 use super::display::{activity_text, office_tier_text, recognition_tier_text};
@@ -14,29 +13,21 @@ use super::week_plan::{PlannedActivity, WeekPlan};
 use super::week_report::WeekReport;
 
 #[derive(Resource, Default)]
-struct ActiveTab(usize); // 0=artist, 1=gigs, 2=shop, 3=recruit
+pub struct ActiveTab(usize); // 0=artist, 1=gigs, 2=shop, 3=recruit
 
-pub struct CentralTabsPlugin;
-
-impl Plugin for CentralTabsPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<ActiveTab>();
-        app.add_systems(
-            EguiPrimaryContextPass,
-            central_tabs_ui
-                .run_if(in_state(AppState::InGame).and(not(resource_exists::<WeekReport>))),
-        );
-    }
-}
-
-fn central_tabs_ui(
+pub fn central_tabs_ui(
     mut contexts: EguiContexts,
     mut game: ResMut<GameWorld>,
     selected: Res<SelectedArtist>,
     catalogs: Option<Res<GameCatalogs>>,
     mut week_plan: ResMut<WeekPlan>,
     mut active_tab: ResMut<ActiveTab>,
+    report: Option<Res<WeekReport>>,
 ) {
+    // Skip when WeekReport modal is active
+    if report.is_some() {
+        return;
+    }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

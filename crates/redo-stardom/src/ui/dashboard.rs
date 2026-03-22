@@ -1,24 +1,12 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
+use bevy_egui::{EguiContexts, egui};
 
 use crate::game_bridge::GameWorld;
-use crate::states::AppState;
 
 use super::SelectedArtist;
 use super::display::activity_text;
 
-pub struct DashboardPlugin;
-
-impl Plugin for DashboardPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            EguiPrimaryContextPass,
-            dashboard_ui.run_if(in_state(AppState::InGame)),
-        );
-    }
-}
-
-fn dashboard_ui(
+pub fn dashboard_ui(
     mut contexts: EguiContexts,
     game: Res<GameWorld>,
     mut selected: ResMut<SelectedArtist>,
