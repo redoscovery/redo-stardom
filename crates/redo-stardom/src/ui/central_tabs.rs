@@ -115,25 +115,29 @@ fn tab_artist(
             }
         });
     } else {
-        ui.horizontal_wrapped(|ui| {
-            for training in &training_defs {
-                let cost = training.tiers.first().map(|t| t.cost).unwrap_or(0);
-                if ui
-                    .button(format!("{} (${})", training.name, cost))
-                    .clicked()
-                {
-                    new_plan = Some(PlannedActivity::Training(training.clone()));
-                }
+        ui.label("-- 訓練 --");
+        for training in &training_defs {
+            let cost = training.tiers.first().map(|t| t.cost).unwrap_or(0);
+            if ui
+                .button(format!("{} (${})", training.name, cost))
+                .clicked()
+            {
+                new_plan = Some(PlannedActivity::Training(training.clone()));
             }
-            for job in &job_defs {
-                if ui.button(format!("{} (+${})", job.name, job.pay)).clicked() {
-                    new_plan = Some(PlannedActivity::Job(job.clone()));
-                }
+        }
+        ui.label("-- 打工 --");
+        for job in &job_defs {
+            if ui
+                .button(format!("{} (+${})", job.name, job.pay))
+                .clicked()
+            {
+                new_plan = Some(PlannedActivity::Job(job.clone()));
             }
-            if ui.button("休息").clicked() {
-                new_plan = Some(PlannedActivity::Rest);
-            }
-        });
+        }
+        ui.label("-- 其他 --");
+        if ui.button("休息").clicked() {
+            new_plan = Some(PlannedActivity::Rest);
+        }
     }
     ui.separator();
 
