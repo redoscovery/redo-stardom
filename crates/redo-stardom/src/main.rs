@@ -24,7 +24,10 @@ fn main() {
         .init_state::<AppState>()
         .add_plugins(ui::UiPlugin)
         .add_systems(Startup, setup_camera)
-        .add_systems(Update, configure_egui_fonts.run_if(resource_exists::<FontsNotConfigured>))
+        .add_systems(
+            Update,
+            configure_egui_fonts.run_if(resource_exists::<FontsNotConfigured>),
+        )
         .init_resource::<FontsNotConfigured>()
         .run();
 }
@@ -36,10 +39,7 @@ fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
 
-fn configure_egui_fonts(
-    mut contexts: EguiContexts,
-    mut commands: Commands,
-) {
+fn configure_egui_fonts(mut contexts: EguiContexts, mut commands: Commands) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };

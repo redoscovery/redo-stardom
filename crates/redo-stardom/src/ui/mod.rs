@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 
-pub mod artist_panel;
+pub mod central_tabs;
 pub mod dashboard;
 pub mod display;
 pub mod events;
-pub mod gig_market;
 pub mod hud;
 pub mod main_menu;
 pub mod week_plan;
@@ -22,8 +21,7 @@ impl Plugin for UiPlugin {
         app.add_plugins(main_menu::MainMenuPlugin);
         app.add_plugins(hud::HudPlugin);
         app.add_plugins(dashboard::DashboardPlugin);
-        app.add_plugins(artist_panel::ArtistPanelPlugin);
-        app.add_plugins(gig_market::GigMarketPlugin);
+        app.add_plugins(central_tabs::CentralTabsPlugin);
         app.add_plugins(events::EventsPlugin);
         app.add_plugins(week_report::WeekReportPlugin);
     }

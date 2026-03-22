@@ -66,17 +66,12 @@ fn hud_ui(
                 office_tier_text(g.company.office_tier)
             ));
             ui.separator();
-            ui.label(format!(
-                "藝人：{}/{}",
-                artist_count, g.company.max_artists
-            ));
+            ui.label(format!("藝人：{}/{}", artist_count, g.company.max_artists));
             ui.separator();
             ui.label(phase_text(g.phase));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                let btn = egui::Button::new(format!(
-                    "推進一週 ({}/{})",
-                    assigned_count, need_count
-                ));
+                let btn =
+                    egui::Button::new(format!("推進一週 ({}/{})", assigned_count, need_count));
                 if all_assigned {
                     if ui.add(btn).clicked() {
                         advance = true;
@@ -120,9 +115,7 @@ fn execute_week(game: &mut ResMut<GameWorld>, plan: &WeekPlan) -> WeekReport {
                 artist_index: *idx,
                 gig: g.clone(),
             }),
-            PlannedActivity::Rest => game.command(GameCommand::AssignRest {
-                artist_index: *idx,
-            }),
+            PlannedActivity::Rest => game.command(GameCommand::AssignRest { artist_index: *idx }),
         }
     }
 
