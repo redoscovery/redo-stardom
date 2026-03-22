@@ -14,23 +14,12 @@ pub enum Spectrum {
     Stance,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct PersonalitySpectrums {
     pub social: i32,   // -100 Introvert to +100 Extrovert
     pub thinking: i32, // -100 Intuitive to +100 Logical
     pub action: i32,   // -100 Cautious to +100 Adventurous
     pub stance: i32,   // -100 Easygoing to +100 Competitive
-}
-
-impl Default for PersonalitySpectrums {
-    fn default() -> Self {
-        Self {
-            social: 0,
-            thinking: 0,
-            action: 0,
-            stance: 0,
-        }
-    }
 }
 
 impl PersonalitySpectrums {

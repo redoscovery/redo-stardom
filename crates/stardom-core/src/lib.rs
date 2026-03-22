@@ -1,13 +1,13 @@
-pub mod types;
+pub mod artist;
 pub mod attribute;
+pub mod calendar;
+pub mod company;
+pub mod config;
+pub mod data_loader;
+pub mod game;
 pub mod persona;
 pub mod stats;
-pub mod artist;
-pub mod company;
-pub mod calendar;
-pub mod config;
-pub mod game;
-pub mod data_loader;
+pub mod types;
 
 #[cfg(test)]
 mod integration_tests {

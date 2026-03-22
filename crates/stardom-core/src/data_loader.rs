@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
 use crate::artist::Artist;
 use crate::attribute::{BaseAttributes, InnerTraits};
 use crate::persona::{ImageTags, PersonalitySpectrums};
 use crate::stats::AuxiliaryStats;
 use crate::types::{Activity, ArtistId};
+use serde::{Deserialize, Serialize};
 
 /// Data definition for an artist, loaded from RON files.
 #[derive(Debug, Clone, Serialize, Deserialize)]

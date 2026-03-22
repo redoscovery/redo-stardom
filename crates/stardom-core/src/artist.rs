@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use crate::attribute::{BaseAttributes, InnerTraits, ProfessionalSkills};
 use crate::persona::{ImageTags, PersonalitySpectrums};
 use crate::stats::AuxiliaryStats;
 use crate::types::{Activity, ArtistId};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Artist {

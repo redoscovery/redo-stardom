@@ -1,9 +1,9 @@
-use serde::{Deserialize, Serialize};
 use crate::artist::Artist;
 use crate::calendar::Calendar;
 use crate::company::CompanyState;
 use crate::config::Settings;
 use crate::types::{Activity, Money};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GamePhase {
@@ -61,7 +61,9 @@ impl GameState {
         for artist in &mut self.artists {
             let active = artist.current_activity.is_public();
             artist.inactive_weeks = if active { 0 } else { artist.inactive_weeks + 1 };
-            artist.stats.apply_weekly_popularity_decay(active, artist.inactive_weeks);
+            artist
+                .stats
+                .apply_weekly_popularity_decay(active, artist.inactive_weeks);
             // Reset activity to Idle for next week
             artist.current_activity = Activity::Idle;
         }

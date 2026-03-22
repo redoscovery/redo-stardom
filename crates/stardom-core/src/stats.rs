@@ -23,23 +23,12 @@ impl RecognitionTier {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct AuxiliaryStats {
     pub recognition: i64, // 0 → ∞, only increases
     pub reputation: i32,  // -100 to +100
     pub popularity: i32,  // 0 to 100, decays weekly
     pub stress: i32,      // 0 to 100
-}
-
-impl Default for AuxiliaryStats {
-    fn default() -> Self {
-        Self {
-            recognition: 0,
-            reputation: 0,
-            popularity: 0,
-            stress: 0,
-        }
-    }
 }
 
 impl AuxiliaryStats {
@@ -79,7 +68,7 @@ impl AuxiliaryStats {
                 _ => 6,
             }
         };
-        self.popularity = (self.popularity - base_decay - inactivity_penalty as i32).max(0);
+        self.popularity = (self.popularity - base_decay - inactivity_penalty).max(0);
     }
 }
 
@@ -115,12 +104,24 @@ mod tests {
         assert_eq!(RecognitionTier::from_value(499), RecognitionTier::Newcomer);
         assert_eq!(RecognitionTier::from_value(500), RecognitionTier::Rising);
         assert_eq!(RecognitionTier::from_value(1999), RecognitionTier::Rising);
-        assert_eq!(RecognitionTier::from_value(2000), RecognitionTier::Established);
-        assert_eq!(RecognitionTier::from_value(4999), RecognitionTier::Established);
+        assert_eq!(
+            RecognitionTier::from_value(2000),
+            RecognitionTier::Established
+        );
+        assert_eq!(
+            RecognitionTier::from_value(4999),
+            RecognitionTier::Established
+        );
         assert_eq!(RecognitionTier::from_value(5000), RecognitionTier::Star);
         assert_eq!(RecognitionTier::from_value(14999), RecognitionTier::Star);
-        assert_eq!(RecognitionTier::from_value(15000), RecognitionTier::Superstar);
-        assert_eq!(RecognitionTier::from_value(99999), RecognitionTier::Superstar);
+        assert_eq!(
+            RecognitionTier::from_value(15000),
+            RecognitionTier::Superstar
+        );
+        assert_eq!(
+            RecognitionTier::from_value(99999),
+            RecognitionTier::Superstar
+        );
     }
 
     #[test]
