@@ -1,0 +1,55 @@
+// Default outfit definitions for stardom-core
+[
+    OutfitDef(
+        id: OutfitId(1),
+        name: "School Uniform",
+        cost: Money(3000),
+        image_modifiers: [
+            (Pure, 15),
+            (Sexy, -10),
+        ],
+        trait_modifiers: [
+            (Confidence, 5),
+        ],
+    ),
+    OutfitDef(
+        id: OutfitId(2),
+        name: "Stage Costume",
+        cost: Money(15000),
+        image_modifiers: [
+            (Sexy, 20),
+            (Cool, 10),
+            (Mysterious, 5),
+        ],
+        trait_modifiers: [
+            (Rebellion, 10),
+        ],
+    ),
+    OutfitDef(
+        id: OutfitId(3),
+        name: "Business Casual",
+        cost: Money(8000),
+        image_modifiers: [
+            (Intellectual, 15),
+            (Cool, 10),
+            (Funny, -5),
+        ],
+        trait_modifiers: [
+            (Confidence, 8),
+        ],
+    ),
+    OutfitDef(
+        id: OutfitId(4),
+        name: "Gothic Lolita",
+        cost: Money(20000),
+        image_modifiers: [
+            (Mysterious, 25),
+            (Pure, -10),
+            (Sexy, 10),
+        ],
+        trait_modifiers: [
+            (Rebellion, 15),
+            (Confidence, -5),
+        ],
+    ),
+]

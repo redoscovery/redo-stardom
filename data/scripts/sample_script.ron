@@ -1,0 +1,47 @@
+ScriptDef(
+    id: ScriptId(1),
+    name: "Year-End Reflection",
+    trigger: MonthReached(12),
+    nodes: [
+        DialogueNode(
+            id: 0,
+            speaker: "Manager",
+            text: "It's been quite a year. Are you ready to reflect on your journey?",
+            choices: [],
+            next: Some(1),
+            condition: None,
+        ),
+        DialogueNode(
+            id: 1,
+            speaker: "Artist",
+            text: "I want to push harder next year. What do you think?",
+            choices: [
+                DialogueChoice(
+                    label: "Agree to rest",
+                    next_node: None,
+                    effects: [
+                        ChangeStress(-10),
+                    ],
+                ),
+                DialogueChoice(
+                    label: "Commit to harder training",
+                    next_node: Some(2),
+                    effects: [
+                        ChangeReputation(5),
+                        ChangeStress(5),
+                    ],
+                ),
+            ],
+            next: None,
+            condition: None,
+        ),
+        DialogueNode(
+            id: 2,
+            speaker: "Manager",
+            text: "I believe in you. Let's make next year even better.",
+            choices: [],
+            next: None,
+            condition: None,
+        ),
+    ],
+)
