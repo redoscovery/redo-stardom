@@ -141,106 +141,73 @@ fn tab_artist(
     }
     ui.separator();
 
-    // Stats in two columns — now we have ~800px width
+    // All stats in single column, scrollable
     egui::ScrollArea::vertical().show(ui, |ui| {
-        ui.columns(2, |cols| {
-            // Left: base attrs, skills, traits
-            cols[0].heading("基礎屬性");
-            cols[0].horizontal_wrapped(|ui| {
-                ui.label(format!("體能：{}", artist.base_attributes.stamina));
-                ui.label(format!("智識：{}", artist.base_attributes.intellect));
-                ui.label(format!("共情：{}", artist.base_attributes.empathy));
-                ui.label(format!("魅力：{}", artist.base_attributes.charm));
+        ui.heading("基礎屬性");
+        ui.label(format!(
+            "體能：{}  智識：{}  共情：{}  魅力：{}",
+            artist.base_attributes.stamina,
+            artist.base_attributes.intellect,
+            artist.base_attributes.empathy,
+            artist.base_attributes.charm
+        ));
+
+        ui.add_space(4.0);
+        ui.heading("專業技能");
+        let skills = &artist.skills;
+        for (name, val) in [
+            ("歌藝", skills.vocal),
+            ("演技", skills.acting),
+            ("舞藝", skills.dance),
+            ("儀態", skills.poise),
+            ("口才", skills.eloquence),
+            ("創作", skills.creativity),
+        ] {
+            ui.horizontal(|ui| {
+                ui.label(format!("{name}：{val:>5}"));
+                ui.add(egui::ProgressBar::new(val as f32 / 10000.0).desired_width(200.0));
             });
-            cols[0].add_space(8.0);
+        }
 
-            cols[0].heading("專業技能");
-            let skills = &artist.skills;
-            for (name, val) in [
-                ("歌藝", skills.vocal),
-                ("演技", skills.acting),
-                ("舞藝", skills.dance),
-                ("儀態", skills.poise),
-                ("口才", skills.eloquence),
-                ("創作", skills.creativity),
-            ] {
-                cols[0].horizontal(|ui| {
-                    ui.label(format!("{name}：{val:>5}"));
-                    ui.add(egui::ProgressBar::new(val as f32 / 10000.0).desired_width(150.0));
-                });
-            }
-            cols[0].add_space(8.0);
+        ui.add_space(4.0);
+        ui.heading("內在特質");
+        ui.label(format!("自信：{}  叛逆：{}", artist.traits.confidence, artist.traits.rebellion));
 
-            cols[0].heading("內在特質");
-            cols[0].label(format!("自信：{}", artist.traits.confidence));
-            cols[0].label(format!("叛逆：{}", artist.traits.rebellion));
+        ui.add_space(4.0);
+        ui.heading("性格光譜");
+        ui.label(format!(
+            "社交：{} ({})  思維：{} ({})",
+            artist.personality.social,
+            if artist.personality.social < 0 { "內斂" } else { "外放" },
+            artist.personality.thinking,
+            if artist.personality.thinking < 0 { "直覺" } else { "邏輯" },
+        ));
+        ui.label(format!(
+            "行事：{} ({})  處世：{} ({})",
+            artist.personality.action,
+            if artist.personality.action < 0 { "謹慎" } else { "冒險" },
+            artist.personality.stance,
+            if artist.personality.stance < 0 { "隨和" } else { "好勝" },
+        ));
 
-            // Right: personality, image, market
-            cols[1].heading("性格光譜");
-            cols[1].label(format!(
-                "社交：{} ({})",
-                artist.personality.social,
-                if artist.personality.social < 0 {
-                    "內斂"
-                } else {
-                    "外放"
-                }
-            ));
-            cols[1].label(format!(
-                "思維：{} ({})",
-                artist.personality.thinking,
-                if artist.personality.thinking < 0 {
-                    "直覺"
-                } else {
-                    "邏輯"
-                }
-            ));
-            cols[1].label(format!(
-                "行事：{} ({})",
-                artist.personality.action,
-                if artist.personality.action < 0 {
-                    "謹慎"
-                } else {
-                    "冒險"
-                }
-            ));
-            cols[1].label(format!(
-                "處世：{} ({})",
-                artist.personality.stance,
-                if artist.personality.stance < 0 {
-                    "隨和"
-                } else {
-                    "好勝"
-                }
-            ));
-            cols[1].add_space(8.0);
+        ui.add_space(4.0);
+        ui.heading("形象標籤");
+        let img = &artist.image;
+        ui.label(format!(
+            "清純：{}  性感：{}  酷帥：{}  知性：{}  搞笑：{}  神秘：{}",
+            img.pure, img.sexy, img.cool, img.intellectual, img.funny, img.mysterious
+        ));
 
-            cols[1].heading("形象標籤");
-            let img = &artist.image;
-            cols[1].horizontal_wrapped(|ui| {
-                for (name, val) in [
-                    ("清純", img.pure),
-                    ("性感", img.sexy),
-                    ("酷帥", img.cool),
-                    ("知性", img.intellectual),
-                    ("搞笑", img.funny),
-                    ("神秘", img.mysterious),
-                ] {
-                    ui.label(format!("{name}：{val}"));
-                }
-            });
-            cols[1].add_space(8.0);
-
-            cols[1].heading("市場狀態");
-            cols[1].label(format!(
-                "知名度：{} ({})",
-                artist.stats.recognition,
-                recognition_tier_text(artist.stats.recognition_tier())
-            ));
-            cols[1].label(format!("風評：{}", artist.stats.reputation));
-            cols[1].label(format!("人氣：{}", artist.stats.popularity));
-            cols[1].label(format!("壓力：{}", artist.stats.stress));
-        });
+        ui.add_space(4.0);
+        ui.heading("市場狀態");
+        ui.label(format!(
+            "知名度：{} ({})  風評：{}  人氣：{}  壓力：{}",
+            artist.stats.recognition,
+            recognition_tier_text(artist.stats.recognition_tier()),
+            artist.stats.reputation,
+            artist.stats.popularity,
+            artist.stats.stress,
+        ));
     });
 
     // Apply plan changes
