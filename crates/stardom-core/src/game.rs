@@ -5,10 +5,13 @@ use crate::config::Settings;
 use crate::crisis::CrisisDef;
 use crate::gig::{GigCategory, GigDef};
 use crate::job::JobDef;
+use crate::narrative::ScriptDef;
 use crate::office::{self, OfficeUpgradeDef};
+use crate::outfit::OutfitDef;
+use crate::recruitment::{self, ArtistProspect};
 use crate::scheduling;
 use crate::training::TrainingDef;
-use crate::types::{Activity, ArtistId, AwardId, Money};
+use crate::types::{Activity, ArtistId, AwardId, Money, OutfitId};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -42,6 +45,17 @@ pub enum GameCommand {
         crisis_index: usize,
         choice: usize,
     },
+    PurchaseOutfit {
+        outfit_id: OutfitId,
+    },
+    EquipOutfit {
+        artist_index: usize,
+        outfit_id: OutfitId,
+    },
+    SignArtist {
+        prospect_index: usize,
+        commission_adjustment: i32,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -61,6 +75,14 @@ pub struct GameState {
     pub awards_won: Vec<(ArtistId, AwardId)>,
     #[serde(default)]
     pub completed_gig_categories: Vec<(ArtistId, GigCategory)>,
+    #[serde(default)]
+    pub outfit_catalog: Vec<OutfitDef>,
+    #[serde(default)]
+    pub owned_outfits: Vec<OutfitId>,
+    #[serde(default)]
+    pub prospects: Vec<ArtistProspect>,
+    #[serde(default)]
+    pub script_catalog: Vec<ScriptDef>,
 }
 
 impl GameState {
@@ -76,6 +98,10 @@ impl GameState {
             active_crises: Vec::new(),
             awards_won: Vec::new(),
             completed_gig_categories: Vec::new(),
+            outfit_catalog: Vec::new(),
+            owned_outfits: Vec::new(),
+            prospects: Vec::new(),
+            script_catalog: Vec::new(),
         }
     }
 
@@ -180,6 +206,42 @@ impl GameState {
                     }
                 }
             }
+            GameCommand::PurchaseOutfit { outfit_id } => {
+                if let Some(outfit) = self.outfit_catalog.iter().find(|o| o.id == outfit_id)
+                    && self.company.balance >= outfit.cost
+                {
+                    let cost = outfit.cost;
+                    self.company.spend(cost);
+                    self.owned_outfits.push(outfit_id);
+                }
+            }
+            GameCommand::EquipOutfit {
+                artist_index,
+                outfit_id,
+            } => {
+                if self.owned_outfits.contains(&outfit_id)
+                    && let Some(artist) = self.artists.get_mut(artist_index)
+                {
+                    artist.equipped_outfit = Some(outfit_id);
+                }
+            }
+            GameCommand::SignArtist {
+                prospect_index,
+                commission_adjustment,
+            } => {
+                if self.artists.len() < self.company.max_artists as usize
+                    && prospect_index < self.prospects.len()
+                {
+                    let prospect = self.prospects.remove(prospect_index);
+                    let negotiated = recruitment::negotiate_commission(
+                        prospect.base_commission,
+                        commission_adjustment,
+                    );
+                    let mut artist = prospect.definition.into_artist();
+                    artist.commission_rate = negotiated;
+                    self.artists.push(artist);
+                }
+            }
         }
     }
 
@@ -251,13 +313,16 @@ impl GameState {
 mod tests {
     use super::*;
     use crate::attribute::BaseAttributes;
+    use crate::attribute::InnerTraits;
     use crate::company::OfficeTier;
     use crate::config::Settings;
     use crate::crisis::{CrisisChoice, CrisisDef};
+    use crate::data_loader::ArtistDefinition;
     use crate::gig::{GigCategory, GigDef};
     use crate::job::JobDef;
     use crate::office::OfficeUpgradeDef;
-    use crate::persona::ImageTag;
+    use crate::persona::{ImageTag, ImageTags, PersonalitySpectrums};
+    use crate::recruitment::ArtistProspect;
     use crate::stats::RecognitionTier;
     use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
     use crate::types::{ArtistId, CrisisId, GigId, JobId, TrainingId};
@@ -568,5 +633,110 @@ mod tests {
         assert_eq!(game.artists[0].stats.popularity, pop_before + 10);
         assert_eq!(game.artists[0].stats.stress, stress_before + 8);
         assert!(game.active_crises.is_empty());
+    }
+
+    fn make_prospect() -> ArtistProspect {
+        ArtistProspect {
+            definition: ArtistDefinition {
+                id: ArtistId(99),
+                name: "Prospect".to_string(),
+                starting_age: 20,
+                base_attributes: BaseAttributes::default(),
+                personality: PersonalitySpectrums::default(),
+                traits: InnerTraits::default(),
+                image: ImageTags::default(),
+            },
+            location: "Cafe".to_string(),
+            available_day: 1,
+            base_commission: 0.30,
+            failed_attempts: 0,
+            locked_until_week: 0,
+        }
+    }
+
+    #[test]
+    fn purchase_and_equip_outfit() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(0));
+        game.outfit_catalog.push(OutfitDef {
+            id: OutfitId(1),
+            name: "Dress".into(),
+            cost: Money(50_000),
+            image_modifiers: vec![],
+            trait_modifiers: vec![],
+        });
+        game.process_command(GameCommand::PurchaseOutfit {
+            outfit_id: OutfitId(1),
+        });
+        assert_eq!(game.company.balance, Money(950_000));
+        assert!(game.owned_outfits.contains(&OutfitId(1)));
+
+        game.process_command(GameCommand::EquipOutfit {
+            artist_index: 0,
+            outfit_id: OutfitId(1),
+        });
+        assert_eq!(game.artists[0].equipped_outfit, Some(OutfitId(1)));
+    }
+
+    #[test]
+    fn cannot_purchase_outfit_without_funds() {
+        let mut game = default_game();
+        game.outfit_catalog.push(OutfitDef {
+            id: OutfitId(2),
+            name: "Expensive".into(),
+            cost: Money(2_000_000),
+            image_modifiers: vec![],
+            trait_modifiers: vec![],
+        });
+        game.process_command(GameCommand::PurchaseOutfit {
+            outfit_id: OutfitId(2),
+        });
+        assert_eq!(game.company.balance, Money(1_000_000));
+        assert!(game.owned_outfits.is_empty());
+    }
+
+    #[test]
+    fn cannot_equip_unowned_outfit() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(0));
+        // No outfit purchased — equip should be ignored
+        game.process_command(GameCommand::EquipOutfit {
+            artist_index: 0,
+            outfit_id: OutfitId(5),
+        });
+        assert_eq!(game.artists[0].equipped_outfit, None);
+    }
+
+    #[test]
+    fn sign_artist_from_prospects() {
+        let mut game = default_game();
+        game.prospects.push(make_prospect());
+        game.process_command(GameCommand::SignArtist {
+            prospect_index: 0,
+            commission_adjustment: -5,
+        });
+        assert_eq!(game.artists.len(), 1);
+        assert!((game.artists[0].commission_rate - 0.25).abs() < 0.01);
+        assert!(game.prospects.is_empty());
+    }
+
+    #[test]
+    fn cannot_sign_over_max_artists() {
+        let mut game = default_game(); // max_artists = 3
+        for i in 0..3 {
+            game.artists.push(Artist::new(
+                ArtistId(i),
+                format!("A{i}"),
+                20,
+                BaseAttributes::default(),
+            ));
+        }
+        game.prospects.push(make_prospect());
+        game.process_command(GameCommand::SignArtist {
+            prospect_index: 0,
+            commission_adjustment: 0,
+        });
+        assert_eq!(game.artists.len(), 3);
+        assert_eq!(game.prospects.len(), 1);
     }
 }

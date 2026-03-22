@@ -28,6 +28,7 @@ mod integration_tests {
     use crate::data_loader::load_artist_definition;
     use crate::game::{GameCommand, GamePhase, GameState};
     use crate::job::JobDef;
+    use crate::save::{load_from_string, save_to_string};
     use crate::stats::RecognitionTier;
     use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
     use crate::types::{JobId, Money, TrainingId};
@@ -101,5 +102,43 @@ mod integration_tests {
         assert!(game.artists[0].stats.stress < 50);
         // Game should still be in main phase
         assert_eq!(game.phase, GamePhase::MainGame);
+    }
+
+    #[test]
+    fn save_and_load_preserves_artist_state() {
+        let ron_str = r#"
+            ArtistDefinition(
+                id: ArtistId(1),
+                name: "Luna Star",
+                starting_age: 18,
+                base_attributes: BaseAttributes(stamina: 60, intellect: 55, empathy: 70, charm: 80),
+                personality: PersonalitySpectrums(social: 30, thinking: -20, action: 10, stance: -40),
+                traits: InnerTraits(confidence: 55, rebellion: 25),
+                image: ImageTags(pure: 60, sexy: 20, cool: 40, intellectual: 30, funny: 10, mysterious: 50),
+            )
+        "#;
+        let def = load_artist_definition(ron_str).unwrap();
+
+        let mut game = GameState::new(Settings::default());
+        game.artists.push(def.into_artist());
+
+        // Advance a few weeks so state is non-trivial
+        for _ in 0..3 {
+            game.process_command(GameCommand::AdvanceWeek);
+        }
+
+        let serialized = save_to_string(&game).expect("serialize");
+        let loaded: GameState = load_from_string(&serialized).expect("deserialize");
+
+        assert_eq!(loaded.artists.len(), 1);
+        assert_eq!(loaded.artists[0].name, "Luna Star");
+        assert_eq!(loaded.artists[0].age, game.artists[0].age);
+        assert_eq!(
+            loaded.artists[0].stats.popularity,
+            game.artists[0].stats.popularity
+        );
+        assert_eq!(loaded.calendar.week, game.calendar.week);
+        assert_eq!(loaded.company.balance, game.company.balance);
+        assert_eq!(loaded.phase, GamePhase::MainGame);
     }
 }
