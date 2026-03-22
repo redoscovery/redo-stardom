@@ -1,7 +1,7 @@
 use crate::attribute::{BaseAttributes, InnerTraits, ProfessionalSkills};
 use crate::persona::{ImageTags, PersonalitySpectrums};
 use crate::stats::AuxiliaryStats;
-use crate::types::{Activity, ArtistId};
+use crate::types::{Activity, ArtistId, OutfitId};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,6 +18,8 @@ pub struct Artist {
     pub current_activity: Activity,
     pub inactive_weeks: u32,
     pub locked_weeks: u32,
+    pub equipped_outfit: Option<OutfitId>,
+    pub commission_rate: f32,
 }
 
 impl Artist {
@@ -35,6 +37,8 @@ impl Artist {
             current_activity: Activity::Idle,
             inactive_weeks: 0,
             locked_weeks: 0,
+            equipped_outfit: None,
+            commission_rate: 0.30,
         }
     }
 
