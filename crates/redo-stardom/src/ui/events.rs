@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use stardom_core::game::GameCommand;
 
 use crate::game_bridge::GameWorld;
@@ -9,7 +9,10 @@ pub struct EventsPlugin;
 
 impl Plugin for EventsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, events_ui.run_if(in_state(AppState::InGame)));
+        app.add_systems(
+            EguiPrimaryContextPass,
+            events_ui.run_if(in_state(AppState::InGame)),
+        );
     }
 }
 

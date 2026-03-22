@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use stardom_core::company::OfficeTier;
 use stardom_core::game::GameCommand;
 use stardom_core::office;
@@ -13,7 +13,10 @@ pub struct GigMarketPlugin;
 
 impl Plugin for GigMarketPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, gig_market_ui.run_if(in_state(AppState::InGame)));
+        app.add_systems(
+            EguiPrimaryContextPass,
+            gig_market_ui.run_if(in_state(AppState::InGame)),
+        );
     }
 }
 

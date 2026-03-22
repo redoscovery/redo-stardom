@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 use stardom_core::game::GameCommand;
 use stardom_core::types::Activity;
 
@@ -13,7 +13,10 @@ pub struct ArtistPanelPlugin;
 
 impl Plugin for ArtistPanelPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, artist_panel_ui.run_if(in_state(AppState::InGame)));
+        app.add_systems(
+            EguiPrimaryContextPass,
+            artist_panel_ui.run_if(in_state(AppState::InGame)),
+        );
     }
 }
 

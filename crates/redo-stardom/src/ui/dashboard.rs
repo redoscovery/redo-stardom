@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::game_bridge::GameWorld;
 use crate::states::AppState;
@@ -10,7 +10,10 @@ pub struct DashboardPlugin;
 
 impl Plugin for DashboardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, dashboard_ui.run_if(in_state(AppState::InGame)));
+        app.add_systems(
+            EguiPrimaryContextPass,
+            dashboard_ui.run_if(in_state(AppState::InGame)),
+        );
     }
 }
 

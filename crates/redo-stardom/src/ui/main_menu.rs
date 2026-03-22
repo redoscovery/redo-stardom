@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContexts, egui};
+use bevy_egui::{EguiContexts, EguiPrimaryContextPass, egui};
 
 use crate::game_bridge::GameWorld;
 use crate::states::AppState;
@@ -8,7 +8,10 @@ pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, main_menu_ui.run_if(in_state(AppState::MainMenu)));
+        app.add_systems(
+            EguiPrimaryContextPass,
+            main_menu_ui.run_if(in_state(AppState::MainMenu)),
+        );
     }
 }
 
