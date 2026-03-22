@@ -46,9 +46,7 @@ impl AuxiliaryStats {
         self.reputation = self.reputation.clamp(-100, 100);
         self.popularity = self.popularity.clamp(0, 100);
         self.stress = self.stress.clamp(0, 100);
-        if self.recognition < 0 {
-            self.recognition = 0;
-        }
+        self.recognition = self.recognition.max(0);
     }
 
     /// Apply weekly popularity decay.

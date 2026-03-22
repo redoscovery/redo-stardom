@@ -1,5 +1,12 @@
 use serde::{Deserialize, Serialize};
 
+macro_rules! clamp_fields {
+    ($self:expr, $min:expr, $max:expr, $($field:ident),+) => {
+        $( $self.$field = $self.$field.clamp($min, $max); )+
+    };
+}
+pub(crate) use clamp_fields;
+
 pub const BASE_ATTR_MIN: i32 = 1;
 pub const BASE_ATTR_MAX: i32 = 100;
 pub const SKILL_MIN: i32 = 0;
@@ -39,10 +46,15 @@ impl BaseAttributes {
     }
 
     pub fn clamp(&mut self) {
-        self.stamina = self.stamina.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
-        self.intellect = self.intellect.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
-        self.empathy = self.empathy.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
-        self.charm = self.charm.clamp(BASE_ATTR_MIN, BASE_ATTR_MAX);
+        clamp_fields!(
+            self,
+            BASE_ATTR_MIN,
+            BASE_ATTR_MAX,
+            stamina,
+            intellect,
+            empathy,
+            charm
+        );
     }
 }
 
@@ -58,12 +70,9 @@ pub struct ProfessionalSkills {
 
 impl ProfessionalSkills {
     pub fn clamp(&mut self) {
-        self.vocal = self.vocal.clamp(SKILL_MIN, SKILL_MAX);
-        self.acting = self.acting.clamp(SKILL_MIN, SKILL_MAX);
-        self.dance = self.dance.clamp(SKILL_MIN, SKILL_MAX);
-        self.poise = self.poise.clamp(SKILL_MIN, SKILL_MAX);
-        self.eloquence = self.eloquence.clamp(SKILL_MIN, SKILL_MAX);
-        self.creativity = self.creativity.clamp(SKILL_MIN, SKILL_MAX);
+        clamp_fields!(
+            self, SKILL_MIN, SKILL_MAX, vocal, acting, dance, poise, eloquence, creativity
+        );
     }
 }
 
@@ -84,8 +93,7 @@ impl Default for InnerTraits {
 
 impl InnerTraits {
     pub fn clamp(&mut self) {
-        self.confidence = self.confidence.clamp(TRAIT_MIN, TRAIT_MAX);
-        self.rebellion = self.rebellion.clamp(TRAIT_MIN, TRAIT_MAX);
+        clamp_fields!(self, TRAIT_MIN, TRAIT_MAX, confidence, rebellion);
     }
 }
 

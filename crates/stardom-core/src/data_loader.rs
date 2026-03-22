@@ -1,8 +1,7 @@
 use crate::artist::Artist;
 use crate::attribute::{BaseAttributes, InnerTraits};
 use crate::persona::{ImageTags, PersonalitySpectrums};
-use crate::stats::AuxiliaryStats;
-use crate::types::{Activity, ArtistId};
+use crate::types::ArtistId;
 use serde::{Deserialize, Serialize};
 
 /// Data definition for an artist, loaded from RON files.
@@ -19,19 +18,11 @@ pub struct ArtistDefinition {
 
 impl ArtistDefinition {
     pub fn into_artist(self) -> Artist {
-        Artist {
-            id: self.id,
-            name: self.name,
-            age: self.starting_age,
-            base_attributes: self.base_attributes,
-            skills: Default::default(),
-            traits: self.traits,
-            personality: self.personality,
-            image: self.image,
-            stats: AuxiliaryStats::default(),
-            current_activity: Activity::Idle,
-            inactive_weeks: 0,
-        }
+        let mut a = Artist::new(self.id, self.name, self.starting_age, self.base_attributes);
+        a.traits = self.traits;
+        a.personality = self.personality;
+        a.image = self.image;
+        a
     }
 }
 
@@ -42,6 +33,8 @@ pub fn load_artist_definition(ron_str: &str) -> Result<ArtistDefinition, ron::er
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::stats::AuxiliaryStats;
+    use crate::types::Activity;
 
     const SAMPLE_RON: &str = r#"
         ArtistDefinition(

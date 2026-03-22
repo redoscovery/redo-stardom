@@ -1,17 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Sub};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct ArtistId(pub u32);
+macro_rules! id_newtype {
+    ($($name:ident),+) => {
+        $(
+            #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+            pub struct $name(pub u32);
+        )+
+    };
+}
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct GigId(pub u32);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct OutfitId(pub u32);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub struct CrisisId(pub u32);
+id_newtype!(ArtistId, GigId, OutfitId, CrisisId);
 
 /// Game currency. Stored as i64 to allow negative balances (debt).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -38,7 +37,7 @@ pub enum Activity {
     PartTimeJob,
     Gig,
     Rest,
-    Idle, // no assignment
+    Idle,
 }
 
 impl Activity {

@@ -1,5 +1,5 @@
 use crate::artist::Artist;
-use crate::calendar::Calendar;
+use crate::calendar::{Calendar, WEEKS_PER_YEAR};
 use crate::company::CompanyState;
 use crate::config::Settings;
 use crate::types::{Activity, Money};
@@ -47,32 +47,24 @@ impl GameState {
     }
 
     fn advance_week(&mut self) {
-        let was_last_week_of_year = self.calendar.week == 52;
+        let was_last_week_of_year = self.calendar.week == WEEKS_PER_YEAR;
         self.calendar.advance_week();
 
-        // Age artists on year rollover
-        if was_last_week_of_year {
-            for artist in &mut self.artists {
+        for artist in &mut self.artists {
+            if was_last_week_of_year {
                 artist.age += 1;
             }
-        }
-
-        // Update each artist's popularity decay
-        for artist in &mut self.artists {
             let active = artist.current_activity.is_public();
             artist.inactive_weeks = if active { 0 } else { artist.inactive_weeks + 1 };
             artist
                 .stats
                 .apply_weekly_popularity_decay(active, artist.inactive_weeks);
-            // Reset activity to Idle for next week
             artist.current_activity = Activity::Idle;
         }
 
-        // Update bankruptcy counter
-        let has_pending_income = false; // TODO: check pending gig income
+        let has_pending_income = false; // TODO: check pending gig income in Phase 2
         self.company.update_bankruptcy_counter(has_pending_income);
 
-        // Check phase transitions
         if self.company.is_bankrupt() {
             self.phase = GamePhase::GameOver;
         } else if self.phase == GamePhase::MainGame && self.calendar.is_goal_period_over() {

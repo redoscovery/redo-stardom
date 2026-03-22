@@ -1,3 +1,4 @@
+use crate::attribute::clamp_fields;
 use serde::{Deserialize, Serialize};
 
 pub const SPECTRUM_MIN: i32 = -100;
@@ -24,10 +25,15 @@ pub struct PersonalitySpectrums {
 
 impl PersonalitySpectrums {
     pub fn clamp(&mut self) {
-        self.social = self.social.clamp(SPECTRUM_MIN, SPECTRUM_MAX);
-        self.thinking = self.thinking.clamp(SPECTRUM_MIN, SPECTRUM_MAX);
-        self.action = self.action.clamp(SPECTRUM_MIN, SPECTRUM_MAX);
-        self.stance = self.stance.clamp(SPECTRUM_MIN, SPECTRUM_MAX);
+        clamp_fields!(
+            self,
+            SPECTRUM_MIN,
+            SPECTRUM_MAX,
+            social,
+            thinking,
+            action,
+            stance
+        );
     }
 
     /// Returns absolute modifier strength (0.0 to 0.15) for given spectrum.
@@ -58,12 +64,17 @@ pub struct ImageTags {
 
 impl ImageTags {
     pub fn clamp(&mut self) {
-        self.pure = self.pure.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
-        self.sexy = self.sexy.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
-        self.cool = self.cool.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
-        self.intellectual = self.intellectual.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
-        self.funny = self.funny.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
-        self.mysterious = self.mysterious.clamp(IMAGE_TAG_MIN, IMAGE_TAG_MAX);
+        clamp_fields!(
+            self,
+            IMAGE_TAG_MIN,
+            IMAGE_TAG_MAX,
+            pure,
+            sexy,
+            cool,
+            intellectual,
+            funny,
+            mysterious
+        );
     }
 }
 
