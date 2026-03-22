@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy_egui::EguiPlugin;
 
+mod data_loading;
 mod game_bridge;
 mod states;
 mod ui;

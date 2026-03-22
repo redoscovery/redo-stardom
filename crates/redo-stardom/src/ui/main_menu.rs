@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
+use bevy_egui::{EguiContexts, egui};
 
 use crate::game_bridge::GameWorld;
 use crate::states::AppState;
@@ -36,7 +36,9 @@ fn main_menu_ui(
                 .button(egui::RichText::new("  New Game  ").size(24.0))
                 .clicked()
             {
-                commands.insert_resource(GameWorld::new_game());
+                let (game_world, catalogs) = GameWorld::new_game();
+                commands.insert_resource(game_world);
+                commands.insert_resource(catalogs);
                 next_state.set(AppState::InGame);
             }
             ui.add_space(10.0);

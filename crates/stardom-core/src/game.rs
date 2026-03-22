@@ -83,6 +83,8 @@ pub struct GameState {
     pub prospects: Vec<ArtistProspect>,
     #[serde(default)]
     pub script_catalog: Vec<ScriptDef>,
+    #[serde(default)]
+    pub gig_catalog: Vec<GigDef>,
 }
 
 impl GameState {
@@ -102,6 +104,7 @@ impl GameState {
             owned_outfits: Vec::new(),
             prospects: Vec::new(),
             script_catalog: Vec::new(),
+            gig_catalog: Vec::new(),
         }
     }
 
