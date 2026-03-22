@@ -10,7 +10,9 @@ macro_rules! id_newtype {
     };
 }
 
-id_newtype!(ArtistId, GigId, OutfitId, CrisisId, TrainingId, JobId);
+id_newtype!(
+    ArtistId, GigId, OutfitId, CrisisId, TrainingId, JobId, AwardId
+);
 
 /// Game currency. Stored as i64 to allow negative balances (debt).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

@@ -1,12 +1,16 @@
 pub mod artist;
 pub mod attribute;
+pub mod award;
 pub mod calendar;
 pub mod company;
 pub mod config;
+pub mod crisis;
 pub mod data_loader;
 pub mod game;
 pub mod gig;
+pub mod gig_pool;
 pub mod job;
+pub mod office;
 pub mod persona;
 pub mod scheduling;
 pub mod stats;

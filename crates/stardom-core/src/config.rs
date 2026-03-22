@@ -6,6 +6,12 @@ pub struct Settings {
     pub retirement_age: u32,
     pub max_artists: u32,
     pub starting_balance: i64,
+    #[serde(default = "default_crisis_base_chance")]
+    pub crisis_base_chance: u32,
+}
+
+fn default_crisis_base_chance() -> u32 {
+    5
 }
 
 impl Default for Settings {
@@ -15,6 +21,7 @@ impl Default for Settings {
             retirement_age: 40,
             max_artists: 3,
             starting_balance: 1_000_000,
+            crisis_base_chance: 5,
         }
     }
 }
@@ -45,11 +52,13 @@ goal_years = 5
 retirement_age = 45
 max_artists = 6
 starting_balance = 2000000
+crisis_base_chance = 10
 "#;
         let s = Settings::load_from_str(toml_str).unwrap();
         assert_eq!(s.goal_years, 5);
         assert_eq!(s.retirement_age, 45);
         assert_eq!(s.max_artists, 6);
         assert_eq!(s.starting_balance, 2_000_000);
+        assert_eq!(s.crisis_base_chance, 10);
     }
 }

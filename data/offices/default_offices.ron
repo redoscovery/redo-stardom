@@ -1,0 +1,24 @@
+// Default office upgrade definitions (sorted by tier ascending)
+[
+    OfficeUpgradeDef(
+        tier: Standard,
+        cost: Money(500000),
+        max_artists_bonus: 2,
+        training_cost_discount_pct: 5,
+        weekly_upkeep: Money(2000),
+    ),
+    OfficeUpgradeDef(
+        tier: Premium,
+        cost: Money(2000000),
+        max_artists_bonus: 5,
+        training_cost_discount_pct: 10,
+        weekly_upkeep: Money(8000),
+    ),
+    OfficeUpgradeDef(
+        tier: Luxury,
+        cost: Money(5000000),
+        max_artists_bonus: 10,
+        training_cost_discount_pct: 20,
+        weekly_upkeep: Money(20000),
+    ),
+]

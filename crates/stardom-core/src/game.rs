@@ -2,11 +2,13 @@ use crate::artist::Artist;
 use crate::calendar::{Calendar, WEEKS_PER_YEAR};
 use crate::company::CompanyState;
 use crate::config::Settings;
-use crate::gig::GigDef;
+use crate::crisis::CrisisDef;
+use crate::gig::{GigCategory, GigDef};
 use crate::job::JobDef;
+use crate::office::{self, OfficeUpgradeDef};
 use crate::scheduling;
 use crate::training::TrainingDef;
-use crate::types::{Activity, Money};
+use crate::types::{Activity, ArtistId, AwardId, Money};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -34,6 +36,12 @@ pub enum GameCommand {
     AssignRest {
         artist_index: usize,
     },
+    UpgradeOffice,
+    DowngradeOffice,
+    RespondToCrisis {
+        crisis_index: usize,
+        choice: usize,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -45,6 +53,14 @@ pub struct GameState {
     pub settings: Settings,
     #[serde(default)]
     pub pending_gigs: Vec<(usize, GigDef)>,
+    #[serde(default)]
+    pub office_upgrades: Vec<OfficeUpgradeDef>,
+    #[serde(default)]
+    pub active_crises: Vec<(usize, CrisisDef)>,
+    #[serde(default)]
+    pub awards_won: Vec<(ArtistId, AwardId)>,
+    #[serde(default)]
+    pub completed_gig_categories: Vec<(ArtistId, GigCategory)>,
 }
 
 impl GameState {
@@ -56,6 +72,10 @@ impl GameState {
             phase: GamePhase::MainGame,
             settings,
             pending_gigs: Vec::new(),
+            office_upgrades: Vec::new(),
+            active_crises: Vec::new(),
+            awards_won: Vec::new(),
+            completed_gig_categories: Vec::new(),
         }
     }
 
@@ -103,6 +123,63 @@ impl GameState {
                     scheduling::apply_rest(artist);
                 }
             }
+            GameCommand::UpgradeOffice => {
+                if let Some(upgrade) =
+                    office::next_upgrade(self.company.office_tier, &self.office_upgrades)
+                    && office::can_afford(self.company.balance, upgrade)
+                {
+                    let cost = upgrade.cost;
+                    let tier = upgrade.tier;
+                    self.company.spend(cost);
+                    self.company.office_tier = tier;
+                }
+            }
+            GameCommand::DowngradeOffice => {
+                let refund =
+                    office::downgrade_refund(self.company.office_tier, &self.office_upgrades);
+                if refund.0 > 0 {
+                    self.company.earn(refund);
+                    // Find previous tier: the tier just before current in upgrades list
+                    let current = self.company.office_tier;
+                    let prev_tier = self
+                        .office_upgrades
+                        .iter()
+                        .rfind(|u| u.tier < current)
+                        .map(|u| u.tier)
+                        .unwrap_or(crate::company::OfficeTier::Starter);
+                    self.company.office_tier = prev_tier;
+                }
+            }
+            GameCommand::RespondToCrisis {
+                crisis_index,
+                choice,
+            } => {
+                if crisis_index < self.active_crises.len() {
+                    let (artist_idx, crisis) = self.active_crises.remove(crisis_index);
+                    if let Some(effect) = crisis.resolve(choice)
+                        && let Some(artist) = self.artists.get_mut(artist_idx)
+                    {
+                        artist.stats.reputation += effect.reputation_change;
+                        artist.stats.popularity += effect.popularity_change;
+                        artist.stats.stress += effect.stress_change;
+                        for (tag, delta) in &effect.image_tag_changes {
+                            match tag {
+                                crate::persona::ImageTag::Pure => artist.image.pure += delta,
+                                crate::persona::ImageTag::Sexy => artist.image.sexy += delta,
+                                crate::persona::ImageTag::Cool => artist.image.cool += delta,
+                                crate::persona::ImageTag::Intellectual => {
+                                    artist.image.intellectual += delta
+                                }
+                                crate::persona::ImageTag::Funny => artist.image.funny += delta,
+                                crate::persona::ImageTag::Mysterious => {
+                                    artist.image.mysterious += delta
+                                }
+                            }
+                        }
+                        artist.image.clamp();
+                    }
+                }
+            }
         }
     }
 
@@ -123,8 +200,12 @@ impl GameState {
             pending.retain(|(idx, gig_def)| {
                 let is_complete = self.artists.get(*idx).is_some_and(|a| a.locked_weeks == 0);
                 if is_complete {
-                    let pay = scheduling::complete_gig(&mut self.artists[*idx], gig_def);
+                    let artist = &mut self.artists[*idx];
+                    let pay = scheduling::complete_gig(artist, gig_def);
                     self.company.earn(Money(pay));
+                    // Track completed gig category
+                    self.completed_gig_categories
+                        .push((artist.id, gig_def.category));
                     false
                 } else {
                     true
@@ -148,6 +229,12 @@ impl GameState {
             }
         }
 
+        // Deduct weekly office upkeep
+        let upkeep = office::get_weekly_upkeep(self.company.office_tier, &self.office_upgrades);
+        if upkeep.0 > 0 {
+            self.company.spend(upkeep);
+        }
+
         // Bankruptcy — pending gigs count as pending income
         let has_pending_income = !self.pending_gigs.is_empty();
         self.company.update_bankruptcy_counter(has_pending_income);
@@ -164,12 +251,16 @@ impl GameState {
 mod tests {
     use super::*;
     use crate::attribute::BaseAttributes;
+    use crate::company::OfficeTier;
     use crate::config::Settings;
+    use crate::crisis::{CrisisChoice, CrisisDef};
     use crate::gig::{GigCategory, GigDef};
     use crate::job::JobDef;
+    use crate::office::OfficeUpgradeDef;
+    use crate::persona::ImageTag;
     use crate::stats::RecognitionTier;
     use crate::training::{PrimaryAttribute, SkillTarget, TrainingDef, TrainingTier};
-    use crate::types::{ArtistId, GigId, JobId, TrainingId};
+    use crate::types::{ArtistId, CrisisId, GigId, JobId, TrainingId};
 
     fn default_game() -> GameState {
         GameState::new(Settings::default())
@@ -375,5 +466,107 @@ mod tests {
         game.process_command(GameCommand::AssignRest { artist_index: 0 });
         game.process_command(GameCommand::AdvanceWeek);
         assert_eq!(game.artists[0].stats.stress, 20);
+    }
+
+    fn game_with_office_data() -> GameState {
+        let mut game = default_game();
+        game.office_upgrades = vec![
+            OfficeUpgradeDef {
+                tier: OfficeTier::Standard,
+                cost: Money(500_000),
+                max_artists_bonus: 1,
+                training_cost_discount_pct: 5,
+                weekly_upkeep: Money(2_000),
+            },
+            OfficeUpgradeDef {
+                tier: OfficeTier::Premium,
+                cost: Money(2_000_000),
+                max_artists_bonus: 2,
+                training_cost_discount_pct: 10,
+                weekly_upkeep: Money(5_000),
+            },
+            OfficeUpgradeDef {
+                tier: OfficeTier::Luxury,
+                cost: Money(5_000_000),
+                max_artists_bonus: 3,
+                training_cost_discount_pct: 15,
+                weekly_upkeep: Money(10_000),
+            },
+        ];
+        game
+    }
+
+    #[test]
+    fn office_upgrade_deducts_cost_and_increases_tier() {
+        let mut game = game_with_office_data();
+        assert_eq!(game.company.balance, Money(1_000_000));
+        game.process_command(GameCommand::UpgradeOffice);
+        assert_eq!(game.company.office_tier, OfficeTier::Standard);
+        assert_eq!(game.company.balance, Money(500_000));
+    }
+
+    #[test]
+    fn office_downgrade_refunds_40_pct() {
+        let mut game = game_with_office_data();
+        // Upgrade to Standard: 1M - 500K = 500K
+        game.process_command(GameCommand::UpgradeOffice);
+        assert_eq!(game.company.balance, Money(500_000));
+        // Downgrade: refund 40% of 500K = 200K → 500K + 200K = 700K
+        game.process_command(GameCommand::DowngradeOffice);
+        assert_eq!(game.company.office_tier, OfficeTier::Starter);
+        assert_eq!(game.company.balance, Money(700_000));
+    }
+
+    #[test]
+    fn weekly_upkeep_deducted() {
+        let mut game = game_with_office_data();
+        game.process_command(GameCommand::UpgradeOffice); // Standard, upkeep 2000
+        let balance_after_upgrade = game.company.balance;
+        game.process_command(GameCommand::AdvanceWeek);
+        assert_eq!(game.company.balance, balance_after_upgrade - Money(2_000));
+    }
+
+    #[test]
+    fn crisis_respond_applies_effects() {
+        let mut game = default_game();
+        game.artists.push(make_artist_with_popularity(50));
+        let crisis = CrisisDef {
+            id: CrisisId(1),
+            name: "Scandal".to_string(),
+            description: "A scandal has erupted.".to_string(),
+            trigger_weight: 10,
+            min_recognition_tier: RecognitionTier::Unknown,
+            choices: vec![
+                CrisisChoice {
+                    label: "Deny".to_string(),
+                    reputation_change: -5,
+                    popularity_change: 10,
+                    stress_change: 8,
+                    image_tag_changes: vec![(ImageTag::Pure, -15)],
+                },
+                CrisisChoice {
+                    label: "Apologize".to_string(),
+                    reputation_change: 5,
+                    popularity_change: -3,
+                    stress_change: 3,
+                    image_tag_changes: vec![],
+                },
+            ],
+        };
+        game.active_crises.push((0, crisis));
+
+        let rep_before = game.artists[0].stats.reputation;
+        let pop_before = game.artists[0].stats.popularity;
+        let stress_before = game.artists[0].stats.stress;
+
+        game.process_command(GameCommand::RespondToCrisis {
+            crisis_index: 0,
+            choice: 0,
+        });
+
+        assert_eq!(game.artists[0].stats.reputation, rep_before - 5);
+        assert_eq!(game.artists[0].stats.popularity, pop_before + 10);
+        assert_eq!(game.artists[0].stats.stress, stress_before + 8);
+        assert!(game.active_crises.is_empty());
     }
 }
