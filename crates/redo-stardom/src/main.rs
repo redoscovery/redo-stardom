@@ -1,5 +1,13 @@
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
+use bevy_egui::EguiPlugin;
+
+mod data_loading;
+mod game_bridge;
+mod states;
+mod ui;
+
+use states::AppState;
 
 fn main() {
     App::new()
@@ -11,5 +19,8 @@ fn main() {
             }),
             ..default()
         }))
+        .add_plugins(EguiPlugin::default())
+        .init_state::<AppState>()
+        .add_plugins(ui::UiPlugin)
         .run();
 }
