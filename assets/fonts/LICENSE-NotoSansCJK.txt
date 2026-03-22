@@ -1,8 +1,0 @@
-Noto Sans CJK TC is licensed under the SIL Open Font License, Version 1.1.
-
-Copyright 2014-2021 Adobe (http://www.adobe.com/).
-
-This Font Software is licensed under the SIL Open Font License, Version 1.1.
-This license is available with a FAQ at: https://openfontlicense.org
-
-Full license text: https://github.com/notofonts/noto-cjk/blob/main/LICENSE

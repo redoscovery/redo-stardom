@@ -36,25 +36,24 @@ fn configure_egui_fonts(mut contexts: EguiContexts) {
         return;
     };
 
-    let font_data = include_bytes!("../../../assets/fonts/NotoSansCJKtc-Regular.otf");
+    let font_data = include_bytes!("../../../assets/fonts/fusion-pixel-12px-zh_hant.otf");
 
     let mut fonts = bevy_egui::egui::FontDefinitions::default();
     fonts.font_data.insert(
-        "NotoSansCJKtc".to_string(),
+        "FusionPixel".to_string(),
         bevy_egui::egui::FontData::from_static(font_data).into(),
     );
 
-    // Prepend to Proportional and Monospace so CJK glyphs are found first
     fonts
         .families
         .entry(bevy_egui::egui::FontFamily::Proportional)
         .or_default()
-        .insert(0, "NotoSansCJKtc".to_string());
+        .insert(0, "FusionPixel".to_string());
     fonts
         .families
         .entry(bevy_egui::egui::FontFamily::Monospace)
         .or_default()
-        .insert(0, "NotoSansCJKtc".to_string());
+        .insert(0, "FusionPixel".to_string());
 
     ctx.set_fonts(fonts);
 }
