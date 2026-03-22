@@ -191,6 +191,9 @@ mod tests {
         assert_eq!(deserialized.skill, training.skill);
         assert_eq!(deserialized.tiers.len(), training.tiers.len());
         assert_eq!(deserialized.primary_attribute, training.primary_attribute);
-        assert_eq!(deserialized.secondary_attribute, training.secondary_attribute);
+        assert_eq!(
+            deserialized.secondary_attribute,
+            training.secondary_attribute
+        );
     }
 }

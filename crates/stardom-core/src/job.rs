@@ -107,7 +107,10 @@ mod tests {
         assert_eq!(deserialized.id, job.id);
         assert_eq!(deserialized.name, job.name);
         assert_eq!(deserialized.pay, job.pay);
-        assert_eq!(deserialized.required_recognition_tier, job.required_recognition_tier);
+        assert_eq!(
+            deserialized.required_recognition_tier,
+            job.required_recognition_tier
+        );
         assert_eq!(deserialized.skill_gains.len(), job.skill_gains.len());
     }
 }

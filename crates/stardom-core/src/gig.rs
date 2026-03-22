@@ -108,7 +108,8 @@ impl GigDef {
         image_mod = image_mod.clamp(0.80, 1.20);
 
         // Personality modifier
-        let personality_mod: f64 = if let Some((spectrum, preference)) = self.personality_preference {
+        let personality_mod: f64 = if let Some((spectrum, preference)) = self.personality_preference
+        {
             let artist_val = personality.get(spectrum);
             // Scale ±0.15 based on match/mismatch
             // If preference > 0, high artist_val → bonus; preference < 0, low artist_val → bonus
