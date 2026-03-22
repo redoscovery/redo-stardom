@@ -1,8 +1,7 @@
-// Default part-time job definitions
 [
     JobDef(
         id: JobId(1),
-        name: "Convenience Store Clerk",
+        name: "便利商店店員",
         pay: 5000,
         skill_gains: [(Eloquence, 5)],
         skill_losses: [],
@@ -12,7 +11,7 @@
     ),
     JobDef(
         id: JobId(2),
-        name: "TV Commercial",
+        name: "電視廣告演出",
         pay: 20000,
         skill_gains: [(Poise, 10), (Eloquence, 5)],
         skill_losses: [],
@@ -22,7 +21,7 @@
     ),
     JobDef(
         id: JobId(3),
-        name: "Variety Show Guest",
+        name: "綜藝節目來賓",
         pay: 50000,
         skill_gains: [(Eloquence, 15), (Creativity, 8)],
         skill_losses: [],

@@ -1,8 +1,7 @@
-// Default gig definitions
 [
     GigDef(
         id: GigId(1),
-        name: "Local Concert",
+        name: "地方演唱會",
         category: Music,
         duration_weeks: 2,
         required_recognition_tier: Newcomer,
@@ -25,7 +24,7 @@
     ),
     GigDef(
         id: GigId(2),
-        name: "TV Drama Supporting Role",
+        name: "電視劇配角",
         category: FilmTv,
         duration_weeks: 4,
         required_recognition_tier: Rising,
@@ -51,7 +50,7 @@
     ),
     GigDef(
         id: GigId(3),
-        name: "Fashion Brand Endorsement",
+        name: "時尚品牌代言",
         category: Endorsement,
         duration_weeks: 1,
         required_recognition_tier: Unknown,

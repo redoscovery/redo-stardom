@@ -1,8 +1,7 @@
 [
-    // Model Award - ceremony in September
     AwardDef(
         id: AwardId(1),
-        name: "Best Model of the Year",
+        name: "年度最佳模特兒獎",
         ceremony_month: 9,
         nomination_month: 8,
         scoring_skills: [
@@ -17,10 +16,9 @@
         recognition_boost: 500,
         reputation_boost: 5,
     ),
-    // Music Award - ceremony in November
     AwardDef(
         id: AwardId(2),
-        name: "Best Music Artist of the Year",
+        name: "年度最佳音樂獎",
         ceremony_month: 11,
         nomination_month: 10,
         scoring_skills: [
@@ -36,10 +34,9 @@
         recognition_boost: 800,
         reputation_boost: 8,
     ),
-    // Film Award - ceremony in December
     AwardDef(
         id: AwardId(3),
-        name: "Best Film Performance",
+        name: "年度最佳影視演員獎",
         ceremony_month: 12,
         nomination_month: 11,
         scoring_skills: [

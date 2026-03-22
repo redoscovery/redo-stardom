@@ -1,30 +1,30 @@
 ScriptDef(
     id: ScriptId(1),
-    name: "Year-End Reflection",
+    name: "年終回顧",
     trigger: MonthReached(12),
     nodes: [
         DialogueNode(
             id: 0,
-            speaker: "Manager",
-            text: "It's been quite a year. Are you ready to reflect on your journey?",
+            speaker: "經紀人",
+            text: "這一年過得真快。要回顧一下這段旅程嗎？",
             choices: [],
             next: Some(1),
             condition: None,
         ),
         DialogueNode(
             id: 1,
-            speaker: "Artist",
-            text: "I want to push harder next year. What do you think?",
+            speaker: "藝人",
+            text: "明年我想更加努力。你覺得呢？",
             choices: [
                 DialogueChoice(
-                    label: "Agree to rest",
+                    label: "好好休息吧",
                     next_node: None,
                     effects: [
                         ChangeStress(-10),
                     ],
                 ),
                 DialogueChoice(
-                    label: "Commit to harder training",
+                    label: "加倍努力訓練",
                     next_node: Some(2),
                     effects: [
                         ChangeReputation(5),
@@ -37,8 +37,8 @@ ScriptDef(
         ),
         DialogueNode(
             id: 2,
-            speaker: "Manager",
-            text: "I believe in you. Let's make next year even better.",
+            speaker: "經紀人",
+            text: "我相信你。明年一定會更好的。",
             choices: [],
             next: None,
             condition: None,

@@ -1,28 +1,27 @@
-// Default crisis definitions
 [
     CrisisDef(
         id: CrisisId(1),
-        name: "Dating Scandal",
-        description: "Photos of you on a date have leaked online. Fans are reacting strongly.",
+        name: "戀情風波",
+        description: "約會照片被偷拍並流出網路，粉絲反應激烈。",
         trigger_weight: 15,
         min_recognition_tier: Newcomer,
         choices: [
             CrisisChoice(
-                label: "Deny everything",
+                label: "全盤否認",
                 reputation_change: -10,
                 popularity_change: 5,
                 stress_change: 15,
                 image_tag_changes: [(Pure, -15)],
             ),
             CrisisChoice(
-                label: "Come clean with a heartfelt statement",
+                label: "坦白發表聲明",
                 reputation_change: 10,
                 popularity_change: -5,
                 stress_change: 5,
                 image_tag_changes: [(Pure, 5), (Mysterious, -10)],
             ),
             CrisisChoice(
-                label: "Stay silent and wait for it to blow over",
+                label: "沉默等待風頭過去",
                 reputation_change: -5,
                 popularity_change: -10,
                 stress_change: 20,
@@ -32,20 +31,20 @@
     ),
     CrisisDef(
         id: CrisisId(2),
-        name: "Stalker Incident",
-        description: "A dangerous fan has been spotted outside your residence. Security is involved.",
+        name: "跟蹤狂事件",
+        description: "有危險的狂熱粉絲出現在藝人住所附近，保安已介入處理。",
         trigger_weight: 8,
         min_recognition_tier: Rising,
         choices: [
             CrisisChoice(
-                label: "File a restraining order publicly",
+                label: "公開申請禁制令",
                 reputation_change: 5,
                 popularity_change: -5,
                 stress_change: 20,
                 image_tag_changes: [(Mysterious, 5)],
             ),
             CrisisChoice(
-                label: "Handle it quietly through management",
+                label: "透過經紀公司低調處理",
                 reputation_change: 0,
                 popularity_change: 0,
                 stress_change: 10,
@@ -55,27 +54,27 @@
     ),
     CrisisDef(
         id: CrisisId(3),
-        name: "Malicious Rumor",
-        description: "An anonymous post claims you behaved rudely behind the scenes. It's going viral.",
+        name: "惡意謠言",
+        description: "匿名貼文指控藝人在幕後態度惡劣，正在網路上瘋傳。",
         trigger_weight: 20,
         min_recognition_tier: Unknown,
         choices: [
             CrisisChoice(
-                label: "Address it head-on with a video message",
+                label: "正面回應，錄影片澄清",
                 reputation_change: 8,
                 popularity_change: 10,
                 stress_change: 8,
                 image_tag_changes: [(Funny, -5), (Intellectual, 5)],
             ),
             CrisisChoice(
-                label: "Laugh it off on social media",
+                label: "在社群媒體上幽默帶過",
                 reputation_change: -3,
                 popularity_change: 15,
                 stress_change: 3,
                 image_tag_changes: [(Funny, 10)],
             ),
             CrisisChoice(
-                label: "Ignore it entirely",
+                label: "完全不理會",
                 reputation_change: -8,
                 popularity_change: -5,
                 stress_change: 5,

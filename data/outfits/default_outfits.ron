@@ -1,8 +1,7 @@
-// Default outfit definitions for stardom-core
 [
     OutfitDef(
         id: OutfitId(1),
-        name: "School Uniform",
+        name: "學生制服",
         cost: Money(3000),
         image_modifiers: [
             (Pure, 15),
@@ -14,7 +13,7 @@
     ),
     OutfitDef(
         id: OutfitId(2),
-        name: "Stage Costume",
+        name: "舞台裝",
         cost: Money(15000),
         image_modifiers: [
             (Sexy, 20),
@@ -27,7 +26,7 @@
     ),
     OutfitDef(
         id: OutfitId(3),
-        name: "Business Casual",
+        name: "商務休閒",
         cost: Money(8000),
         image_modifiers: [
             (Intellectual, 15),
@@ -40,7 +39,7 @@
     ),
     OutfitDef(
         id: OutfitId(4),
-        name: "Gothic Lolita",
+        name: "哥德蘿莉",
         cost: Money(20000),
         image_modifiers: [
             (Mysterious, 25),

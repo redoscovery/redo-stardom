@@ -18,7 +18,7 @@ impl GameWorld {
         // Add a sample artist so the game starts with something to interact with
         let mut sample = stardom_core::artist::Artist::new(
             stardom_core::types::ArtistId(1),
-            "Luna Star".to_string(),
+            "林夢華".to_string(),
             18,
             stardom_core::attribute::BaseAttributes::new(60, 55, 70, 80),
         );

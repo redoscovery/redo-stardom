@@ -1,6 +1,6 @@
 ArtistDefinition(
     id: ArtistId(1),
-    name: "Luna Star",
+    name: "林夢華",
     starting_age: 18,
     base_attributes: BaseAttributes(
         stamina: 60,
