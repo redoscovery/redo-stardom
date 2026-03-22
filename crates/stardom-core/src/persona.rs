@@ -7,7 +7,7 @@ pub const IMAGE_TAG_MIN: i32 = 0;
 pub const IMAGE_TAG_MAX: i32 = 100;
 const MAX_SPECTRUM_BONUS: f64 = 0.15;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Spectrum {
     Social,
     Thinking,
